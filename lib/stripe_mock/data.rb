@@ -1,5 +1,6 @@
 module StripeMock
   module Data
+    SUBSCRIPTION_ID = 'sub_1NgMA8JhE6Jh3KyHcttrJnA9test'
 
     def self.mock_account(params = {})
       id = params[:id] || 'acct_103ED82ePvKYlo2C'
@@ -360,7 +361,7 @@ module StripeMock
 
     #FIXME nested overrides would be better than hardcoding plan_id
     def self.mock_subscription(params={})
-      id = params[:id] || 'sub_1NgMA8JhE6Jh3KyHcttrJnA9test'
+      id = params[:id] || SUBSCRIPTION_ID
       StripeMock::Util.rmerge({
         id: id,
         object: 'subscription',
@@ -479,7 +480,7 @@ module StripeMock
         next_payment_attempt: 1349825350,
         charge: nil,
         discount: nil,
-        subscription: mock_subscription[:id]
+        subscription: SUBSCRIPTION_ID
       }.merge(params)
       if invoice[:discount]
         invoice[:total] = [0, invoice[:subtotal] - invoice[:discount][:coupon][:amount_off]].max if invoice[:discount][:coupon][:amount_off]
@@ -514,7 +515,7 @@ module StripeMock
           }
         ],
         quantity: nil,
-        subscription: mock_subscription[:id],
+        subscription: SUBSCRIPTION_ID,
         price: mock_price,
         description: "Test invoice item",
         metadata: {}
