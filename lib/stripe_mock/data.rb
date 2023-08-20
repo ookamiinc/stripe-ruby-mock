@@ -181,8 +181,8 @@ module StripeMock
     def self.mock_charge(params={})
       charge_id = params[:id] || "ch_1fD6uiR9FAA2zc"
       currency = params[:currency] || StripeMock.default_currency
-      payment_intent = mock_payment_intent(params)[:id] unless params.key?(:payment_intent)
-      payment_method = mock_payment_method(params)[:id] unless params.key?(:payment_method)
+      payment_intent = mock_payment_intent[:id]
+      payment_method = mock_payment_method[:id]
       {
         id: charge_id,
         object: "charge",
