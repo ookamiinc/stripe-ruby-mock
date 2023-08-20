@@ -359,7 +359,7 @@ module StripeMock
       }.merge(params)
     end
 
-    #FIXME nested overrides would be better than hardcoding plan_id
+    #FIXME nested overrides would be better than hardcoding price_id
     def self.mock_subscription(params={})
       id = params[:id] || SUBSCRIPTION_ID
       StripeMock::Util.rmerge({
@@ -1173,9 +1173,9 @@ module StripeMock
         object: 'subscription_item',
         created: 1504716183,
         metadata: {},
-        plan: {
+        price: {
           id: 'PER_USER_PLAN1',
-          object: 'plan',
+          object: 'price',
           amount: 1337,
           created: 1504716177,
           currency: StripeMock.default_currency,
