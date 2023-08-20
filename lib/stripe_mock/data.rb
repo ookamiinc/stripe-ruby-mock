@@ -1171,23 +1171,13 @@ module StripeMock
       {
         id: id,
         object: 'subscription_item',
+        billing_thresholds: nil,
         created: 1504716183,
         metadata: {},
-        price: {
-          id: 'PER_USER_PLAN1',
-          object: 'price',
-          amount: 1337,
-          created: 1504716177,
-          currency: StripeMock.default_currency,
-          interval: 'month',
-          interval_count: 1,
-          livemode: false,
-          metadata: {},
-          name: 'StripeMock Default Plan ID',
-          statement_descriptor: nil,
-          trial_period_days: nil
-        },
-        quantity: 2
+        price: mock_price,
+        quantity: 2,
+        subscription: params[:subscription] || 'test_sub_default',
+        tax_rates: []
       }.merge(params)
     end
 
