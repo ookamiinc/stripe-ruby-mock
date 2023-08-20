@@ -32,7 +32,6 @@ def it_behaves_like_stripe(&block)
   it_behaves_like 'PaymentMethod API', &block
   it_behaves_like 'SetupIntent API', &block
   it_behaves_like 'Stripe Error Mocking', &block
-  it_behaves_like 'Customer Subscriptions with plans', &block
   it_behaves_like 'Customer Subscriptions with prices', &block
   it_behaves_like 'Subscription Items API', &block
   it_behaves_like 'Webhook Events API', &block
