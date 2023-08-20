@@ -103,7 +103,7 @@ module StripeMock
           raise Stripe::InvalidRequestError.new("Received unknown parameter: #{unknown_params.join}", unknown_params.first.to_s, http_status: 400)
         end
 
-        subscription = Data.mock_subscription(params.merge({ id: (params[:id] || new_id('sub')) }))
+        subscription = Data.mock_subscription({ id: (params[:id] || new_id('sub')) })
         subscription = resolve_subscription_changes(subscription, subscription_prices, customer, params)
         if headers[:idempotency_key]
           subscription[:idempotency_key] = headers[:idempotency_key]
