@@ -33,16 +33,16 @@ module StripeMock
         customers[stripe_account] ||= {}
         customers[stripe_account][params[:id]] = Data.mock_customer(sources, params)
 
-        if params[:plan]
-          plan_id = params[:plan].to_s
-          plan = assert_existence :plan, plan_id, plans[plan_id]
+        if params[:price]
+          price_id = params[:price].to_s
+          price = assert_existence :price, price_id, prices[price_id]
 
-          if params[:default_source].nil? && params[:trial_end].nil? && plan[:trial_period_days].nil? && plan[:amount] != 0
+          if params[:default_source].nil? && params[:trial_end].nil? && params[:trial_period_days].nil? && price[:unit_amount] != 0
             raise Stripe::InvalidRequestError.new('You must supply a valid card', nil, http_status: 400)
           end
 
           subscription = Data.mock_subscription({ id: new_id('su') })
-          subscription = resolve_subscription_changes(subscription, [plan], customers[stripe_account][params[:id]], params)
+          subscription = resolve_subscription_changes(subscription, [price], customers[stripe_account][params[:id]], params)
           add_subscription_to_customer(customers[stripe_account][params[:id]], subscription)
           subscriptions[subscription[:id]] = subscription
         elsif params[:trial_end]

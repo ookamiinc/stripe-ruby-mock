@@ -65,7 +65,7 @@ module StripeMock
         stripe_account = headers && headers[:stripe_account] || Stripe.api_key
         route =~ method_url
         raise Stripe::InvalidRequestError.new('Missing required param: customer if subscription is not provided', nil, http_status: 400) if params[:customer].nil? && params[:subscription].nil?
-        raise Stripe::InvalidRequestError.new('When previewing changes to a subscription, you must specify either `subscription` or `subscription_items`', nil, http_status: 400) if !params[:subscription_proration_date].nil? && params[:subscription].nil? && params[:subscription_plan].nil?
+        raise Stripe::InvalidRequestError.new('When previewing changes to a subscription, you must specify either `subscription` or `subscription_items`', nil, http_status: 400) if !params[:subscription_proration_date].nil? && params[:subscription].nil? && params[:subscription_price].nil?
         raise Stripe::InvalidRequestError.new('Cannot specify proration date without specifying a subscription', nil, http_status: 400) if !params[:subscription_proration_date].nil? && params[:subscription].nil?
 
         customer = customers[stripe_account][params[:customer]]
@@ -86,14 +86,14 @@ module StripeMock
 
         prorating = false
         subscription_proration_date = nil
-        subscription_plan_id = params[:subscription_plan] || subscription[:plan][:id]
+        subscription_price_id = params[:subscription_price] || subscription[:price][:id]
         subscription_quantity = params[:subscription_quantity] || subscription[:quantity]
-        if subscription_plan_id != subscription[:plan][:id] || subscription_quantity != subscription[:quantity]
+        if subscription_price_id != subscription[:price][:id] || subscription_quantity != subscription[:quantity]
           prorating = true
           invoice_date = Time.now.to_i
-          subscription_plan = assert_existence :plan, subscription_plan_id, plans[subscription_plan_id.to_s]
+          subscription_price = assert_existence :price, subscription_price_id, prices[subscription_price_id.to_s]
           preview_subscription = Data.mock_subscription
-          preview_subscription = resolve_subscription_changes(preview_subscription, [subscription_plan], customer, { trial_end: params[:subscription_trial_end] })
+          preview_subscription = resolve_subscription_changes(preview_subscription, [subscription_price], customer, { trial_end: params[:subscription_trial_end] })
           preview_subscription[:id] = subscription[:id]
           preview_subscription[:quantity] = subscription_quantity
           subscription_proration_date = params[:subscription_proration_date] || Time.now
@@ -106,7 +106,7 @@ module StripeMock
 
         if prorating
           unused_amount = (
-            subscription[:plan][:amount].to_f *
+            subscription[:price][:amount].to_f *
               subscription[:quantity] *
               (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
             ).ceil
@@ -115,7 +115,7 @@ module StripeMock
                                    id: new_id('ii'),
                                    amount: -unused_amount,
                                    description: 'Unused time',
-                                   plan: subscription[:plan],
+                                   price: subscription[:price],
                                    period: {
                                        start: subscription_proration_date.to_i,
                                        end: subscription[:current_period_end]
@@ -124,14 +124,14 @@ module StripeMock
                                    proration: true
           )
 
-          preview_plan = assert_existence :plan, params[:subscription_plan], plans[params[:subscription_plan]]
-          if preview_plan[:interval] == subscription[:plan][:interval] && preview_plan[:interval_count] == subscription[:plan][:interval_count] && params[:subscription_trial_end].nil?
-            remaining_amount = preview_plan[:amount] * subscription_quantity * (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
+          preview_price = assert_existence :price, params[:subscription_price], prices[params[:subscription_price]]
+          if preview_price[:interval] == subscription[:price][:interval] && preview_price[:interval_count] == subscription[:price][:interval_count] && params[:subscription_trial_end].nil?
+            remaining_amount = preview_price[:amount] * subscription_quantity * (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
             invoice_lines << Data.mock_line_item(
                                      id: new_id('ii'),
                                      amount: remaining_amount,
                                      description: 'Remaining time',
-                                     plan: preview_plan,
+                                     price: preview_price,
                                      period: {
                                          start: subscription_proration_date.to_i,
                                          end: subscription[:current_period_end]
@@ -163,13 +163,13 @@ module StripeMock
         Data.mock_line_item(
           id: subscription[:id],
           type: "subscription",
-          plan: subscription[:plan],
-          amount: subscription[:status] == 'trialing' ? 0 : subscription[:plan][:amount] * subscription[:quantity],
+          price: subscription[:price],
+          amount: subscription[:status] == 'trialing' ? 0 : subscription[:price][:amount] * subscription[:quantity],
           discountable: true,
           quantity: subscription[:quantity],
           period: {
             start: subscription[:current_period_end],
-            end: get_ending_time(subscription[:current_period_start], subscription[:plan], 2)
+            end: get_ending_time(subscription[:current_period_start], subscription[:price], 2)
           })
       end
 
