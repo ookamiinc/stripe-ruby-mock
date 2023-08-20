@@ -38,7 +38,7 @@ module StripeMock
         stripe_account = headers && headers[:stripe_account] || Stripe.api_key
         route =~ method_url
 
-        subscription_plans = get_subscription_plans_from_params(params)
+        subscription_prices = get_subscription_prices_from_params(params)
         customer = assert_existence :customer, $1, customers[stripe_account][$1]
 
         if params[:source]
@@ -48,11 +48,11 @@ module StripeMock
         end
 
         subscription = Data.mock_subscription({ id: (params[:id] || new_id('su')) })
-        subscription = resolve_subscription_changes(subscription, subscription_plans, customer, params)
+        subscription = resolve_subscription_changes(subscription, subscription_prices, customer, params)
 
-        # Ensure customer has card to charge if plan has no trial and is not free
-        # Note: needs updating for subscriptions with multiple plans
-        verify_card_present(customer, subscription_plans.first, subscription, params)
+        # Ensure customer has card to charge if price has no trial and is not free
+        # Note: needs updating for subscriptions with multiple prices
+        verify_card_present(customer, subscription_prices.first, subscription, params)
 
         if params[:coupon]
           coupon_id = params[:coupon]
@@ -85,7 +85,7 @@ module StripeMock
         end
         route =~ method_url
 
-        subscription_plans = get_subscription_plans_from_params(params)
+        subscription_prices = get_subscription_prices_from_params(params)
 
         customer = params[:customer]
         customer_id = customer.is_a?(Stripe::Customer) ? customer[:id] : customer.to_s
@@ -97,21 +97,21 @@ module StripeMock
           customer[:default_source] = new_card[:id]
         end
 
-        allowed_params = %w(id customer application_fee_percent coupon items metadata plan quantity source tax_percent trial_end trial_period_days current_period_start created prorate billing_cycle_anchor billing days_until_due idempotency_key enable_incomplete_payments cancel_at_period_end default_tax_rates payment_behavior pending_invoice_item_interval default_payment_method collection_method off_session trial_from_plan proration_behavior backdate_start_date transfer_data expand automatic_tax payment_settings trial_settings)
+        allowed_params = %w(id customer application_fee_percent coupon items metadata quantity source tax_percent trial_end trial_period_days current_period_start created prorate billing_cycle_anchor billing days_until_due idempotency_key enable_incomplete_payments cancel_at_period_end default_tax_rates payment_behavior pending_invoice_item_interval default_payment_method collection_method off_session proration_behavior backdate_start_date transfer_data expand automatic_tax payment_settings trial_settings)
         unknown_params = params.keys - allowed_params.map(&:to_sym)
         if unknown_params.length > 0
           raise Stripe::InvalidRequestError.new("Received unknown parameter: #{unknown_params.join}", unknown_params.first.to_s, http_status: 400)
         end
 
         subscription = Data.mock_subscription({ id: (params[:id] || new_id('su')) })
-        subscription = resolve_subscription_changes(subscription, subscription_plans, customer, params)
+        subscription = resolve_subscription_changes(subscription, subscription_prices, customer, params)
         if headers[:idempotency_key]
           subscription[:idempotency_key] = headers[:idempotency_key]
         end
 
-        # Ensure customer has card to charge if plan has no trial and is not free
-        # Note: needs updating for subscriptions with multiple plans
-        verify_card_present(customer, subscription_plans.first, subscription, params)
+        # Ensure customer has card to charge if price has no trial and is not free
+        # Note: needs updating for subscriptions with multiple prices
+        verify_card_present(customer, subscription_prices.first, subscription, params)
 
         if params[:coupon]
           coupon_id = params[:coupon]
@@ -153,8 +153,8 @@ module StripeMock
             intent_status = subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
             intent = Data.mock_payment_intent({
               status: intent_status,
-              amount: subscription[:plan][:amount],
-              currency: subscription[:plan][:currency]
+              amount: subscription[:price][:amount],
+              currency: subscription[:price][:currency]
             })
             payment_intent = s.include?('latest_invoice.payment_intent') ? intent : intent.id
           end
@@ -213,11 +213,11 @@ module StripeMock
           customer[:default_source] = new_card[:id]
         end
 
-        subscription_plans = get_subscription_plans_from_params(params)
+        subscription_prices = get_subscription_prices_from_params(params)
 
-        # subscription plans are not being updated but load them for the response
-        if subscription_plans.empty?
-          subscription_plans = subscription[:items][:data].map { |item| item[:plan] }
+        # subscription prices are not being updated but load them for the response
+        if subscription_prices.empty?
+          subscription_prices = subscription[:items][:data].map { |item| item[:plan] }
         end
 
         if params[:coupon]
@@ -251,11 +251,11 @@ module StripeMock
         params[:current_period_start] = subscription[:current_period_start]
         params[:trial_end] = params[:trial_end] || subscription[:trial_end]
 
-        plan_amount_was = subscription.dig(:plan, :amount)
+        price_amount_was = subscription.dig(:plan, :amount)
 
-        subscription = resolve_subscription_changes(subscription, subscription_plans, customer, params)
+        subscription = resolve_subscription_changes(subscription, subscription_prices, customer, params)
 
-        verify_card_present(customer, subscription_plans.first, subscription, params) if plan_amount_was == 0 && subscription.dig(:plan, :amount) && subscription.dig(:plan, :amount) > 0
+        verify_card_present(customer, subscription_prices.first, subscription, params) if plan_amount_was == 0 && subscription.dig(:plan, :amount) && subscription.dig(:plan, :amount) > 0
 
         # delete the old subscription, replace with the new subscription
         customer[:subscriptions][:data].reject! { |sub| sub[:id] == subscription[:id] }
@@ -295,30 +295,30 @@ module StripeMock
 
       private
 
-      def get_subscription_plans_from_params(params)
-        plan_ids = if params[:plan]
-                     [params[:plan].to_s]
+      def get_subscription_prices_from_params(params)
+        price_ids = if params[:plan]
+                     [params[:price].to_s]
                    elsif params[:items]
                      items = params[:items]
                      items = items.values if items.respond_to?(:values)
-                     items.map { |item| item[:plan] ? item[:plan] : item[:price] }
+                     items.map { |item| item[:price] ? item[:plan] : item[:price] }
                    else
                      []
                    end
-        plan_ids.compact!
-        plan_ids.each do |plan_id|
-          assert_existence :plan, plan_id, plans[plan_id]
+        price_ids.compact!
+        price_ids.each do |plan_id|
+          assert_existence :price, plan_id, plans[plan_id]
         rescue Stripe::InvalidRequestError
-          assert_existence :price, plan_id, prices[plan_id]
+          assert_existence :price, price_id, prices[plan_id]
         end
-        plan_ids.map { |plan_id| plans[plan_id] || prices[plan_id]}
+        price_ids.map { |plan_id| plans[plan_id] || prices[plan_id]}
       end
 
       # Ensure customer has card to charge unless one of the following criterias is met:
       # 1) is in trial
       # 2) is free
       # 3) has billing set to send invoice
-      def verify_card_present(customer, plan, subscription, params={})
+      def verify_card_present(customer, price, subscription, params={})
         return if customer[:default_source]
         return if customer[:invoice_settings][:default_payment_method]
         return if customer[:trial_end]
@@ -326,17 +326,17 @@ module StripeMock
         return if params[:payment_behavior] == 'default_incomplete'
         return if subscription[:default_payment_method]
 
-        plan_trial_period_days = plan[:trial_period_days] || 0
-        plan_has_trial = plan_trial_period_days != 0 || plan[:amount] == 0 || plan[:trial_end]
-        return if plan && plan_has_trial
+        price_trial_period_days = plan[:trial_period_days] || 0
+        price_has_trial = plan_trial_period_days != 0 || plan[:amount] == 0 || plan[:trial_end]
+        return if price && plan_has_trial
 
         return if subscription && subscription[:trial_end] && subscription[:trial_end] != 'now'
 
         if subscription[:items]
           trial = subscription[:items][:data].none? do |item|
-            plan = item[:plan]
-            (plan[:trial_period_days].nil? || plan[:trial_period_days] == 0) &&
-              (plan[:trial_end].nil? || plan[:trial_end] == 'now')
+            price = item[:plan]
+            (price[:trial_period_days].nil? || plan[:trial_period_days] == 0) &&
+              (price[:trial_end].nil? || plan[:trial_end] == 'now')
           end
           return if trial
         end
