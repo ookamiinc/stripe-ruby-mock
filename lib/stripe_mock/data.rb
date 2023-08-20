@@ -360,53 +360,77 @@ module StripeMock
 
     #FIXME nested overrides would be better than hardcoding plan_id
     def self.mock_subscription(params={})
+      id = params[:id] || 'sub_1NgMA8JhE6Jh3KyHcttrJnA9test'
       StripeMock::Util.rmerge({
-        created: 1478204116,
-        billing: 'charge_automatically',
-        current_period_start: 1308595038,
-        current_period_end: 1308681468,
-        status: 'trialing',
-        trial_from_plan: false,
-        plan: {
-          interval: 'month',
-          amount: 7500,
-          trial_period_days: 30,
-          object: 'plan',
-          id: '__test_plan_id__'
+        id: id,
+        object: 'subscription',
+        application: nil,
+        application_fee_percent: nil,
+        automatic_tax: {
+          enabled: false
         },
+        billing_cycle_anchor: 1692340079,
+        billing_thresholds: nil,
+        cancel_at: nil,
+        cancel_at_period_end: false,
+        canceled_at: nil,
+        cancellation_details: {
+          comment: nil,
+          feedback: nil,
+          reason: nil
+        },
+        collection_method: 'charge_automatically',
+        created: 1478204116,
+        currency: StripeMock.default_currency,
+        current_period_end: 1308681468,
+        current_period_start: 1308595038,
+        customer: 'c_test_customer',
+        days_until_due: nil,
+        default_payment_method: nil,
+        default_source: nil,
+        default_tax_rates: [],
+        description: nil,
+        discount: nil,
+        ended_at: nil,
         items: {
           object: 'list',
           data: [{
             id: 'si_1AwFf62eZvKYlo2C9u6Dhf9',
+            billing_thresholds: nil,
             created: 1504035973,
             metadata: {},
             object: 'subscription_item',
-            plan: {
-              amount: 999,
-              created: 1504035972,
-              currency: StripeMock.default_currency
-            },
-            quantity: 1
+            price: mock_price,
+            quantity: 1,
+            subscription: mock_subscription[:id],
+            tax_rates: []
           }]
         },
-        cancel_at_period_end: false,
-        canceled_at: nil,
-        collection_method: 'charge_automatically',
-        ended_at: nil,
-        start_date: 1308595038,
-        object: 'subscription',
-        trial_start: 1308595038,
-        trial_end: 1308681468,
-        customer: 'c_test_customer',
-        quantity: 1,
-        tax_percent: nil,
-        discount: nil,
+        latest_invoice: mock_invoice[:id]
+        livemode: false,
         metadata: {},
-        default_tax_rates: nil,
-        default_payment_method: nil,
-        pending_invoice_item_interval: nil,
         next_pending_invoice_item_invoice: nil,
-        latest_invoice: nil
+        on_behalf_of: nil,
+        pause_collection: nil,
+        payment_settings: {
+          payment_method_options: nil,
+          payment_method_types: nil,
+          save_default_payment_method: 'off'
+        },
+        pending_invoice_item_interval: nil,
+        pending_setup_intent: nil,
+        pending_update: nil,
+        schedule: nil,
+        start_date: 1308595038,
+        status: 'trialing',
+        test_clock: nil,
+        trial_end: 1308681468,
+        trial_settings: {
+          end_behavior: {
+            missing_payment_method: 'create_invoice'
+          }
+        },
+        trial_start: 1308595038
       }, params)
     end
 
