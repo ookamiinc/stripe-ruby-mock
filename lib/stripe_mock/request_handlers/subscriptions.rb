@@ -161,7 +161,7 @@ module StripeMock
         subscription[:latest_invoice] = invoice
 
         subscriptions[subscription[:id]] = subscription
-        add_subscription_to_customer(customer, subscription)
+        add_subscription_to_customer(customer, subscription, payment_intent)
 
         subscriptions[subscription[:id]]
       end
