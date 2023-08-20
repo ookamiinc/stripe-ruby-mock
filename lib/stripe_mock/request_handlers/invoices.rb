@@ -106,7 +106,7 @@ module StripeMock
 
         if prorating
           unused_amount = (
-            subscription[:price][:amount].to_f *
+            subscription[:price][:unit_amount].to_f *
               subscription[:quantity] *
               (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
             ).ceil
@@ -164,7 +164,7 @@ module StripeMock
           id: subscription[:id],
           type: "subscription",
           price: subscription[:price],
-          amount: subscription[:status] == 'trialing' ? 0 : subscription[:price][:amount] * subscription[:quantity],
+          amount: subscription[:status] == 'trialing' ? 0 : subscription[:price][:unit_amount] * subscription[:quantity],
           discountable: true,
           quantity: subscription[:quantity],
           period: {

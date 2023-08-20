@@ -65,7 +65,7 @@ module StripeMock
           charges[id] = Data.mock_charge(
             :id => id,
             :customer => cus[:id],
-            :amount => (sub[:price] ? sub[:price][:amount] : total_items_amount(sub[:items][:data]))
+            :amount => (sub[:price] ? sub[:price][:unit_amount] : total_items_amount(sub[:items][:data]))
           )
         end
 
@@ -120,7 +120,7 @@ module StripeMock
         total = 0
         items.each do |item|
           quantity = item[:quantity] || 1
-          amount = item[:price][:unit_amount] || item[:price][:amount]
+          amount = item[:price][:unit_amount]
           total += quantity * amount
         end
         total
