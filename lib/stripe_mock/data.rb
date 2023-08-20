@@ -440,7 +440,7 @@ module StripeMock
       currency = params[:currency] || StripeMock.default_currency
       lines << Data.mock_line_item() if lines.empty?
       invoice = {
-        id: 'in_test_invoice',
+        id: in_id,
         status: 'open',
         invoice_pdf: 'pdf_url',
         hosted_invoice_url: 'hosted_invoice_url',
@@ -480,7 +480,7 @@ module StripeMock
         next_payment_attempt: 1349825350,
         charge: nil,
         discount: nil,
-        subscription: SUBSCRIPTION_ID
+        subscription: params[:subscription] || nil
       }.merge(params)
       if invoice[:discount]
         invoice[:total] = [0, invoice[:subtotal] - invoice[:discount][:coupon][:amount_off]].max if invoice[:discount][:coupon][:amount_off]
@@ -495,9 +495,10 @@ module StripeMock
     end
 
     def self.mock_line_item(params = {})
+      id = params[:id] || "test_il_default"
       currency = params[:currency] || StripeMock.default_currency
       {
-        id: "ii_test",
+        id: id,
         object: "line_item",
         type: "invoiceitem",
         livemode: false,
@@ -515,7 +516,7 @@ module StripeMock
           }
         ],
         quantity: 1,
-        subscription: SUBSCRIPTION_ID,
+        subscription: params[:subscription] || nil,
         price: mock_price,
         description: "Test invoice item",
         metadata: {}
