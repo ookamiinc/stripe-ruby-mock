@@ -22,21 +22,11 @@ module StripeMock
       end
 
       def list_plans(limit)
-        Stripe::Plan.list(limit: limit)
+        Stripe::Price.list(limit: limit)
       end
 
       def create_plan(params = {})
-        Stripe::Plan.create create_plan_params(params)
-      end
-
-      def create_plan_params(params = {})
-        {
-          :id => 'stripe_mock_default_plan_id',
-          :interval => 'month',
-          :currency => StripeMock.default_currency,
-          :product => nil, # need to override yourself to pass validations
-          :amount => 1337
-        }.merge(params)
+        create_price(params)
       end
 
       def create_price(params = {})
