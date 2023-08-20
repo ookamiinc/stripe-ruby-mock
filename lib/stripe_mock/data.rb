@@ -610,31 +610,6 @@ module StripeMock
       }.merge(params)
     end
 
-    def self.mock_plan(params={})
-      currency = params[:currency] || StripeMock.default_currency
-      {
-        id: "mock_plan_123",
-        object: "plan",
-        active: true,
-        aggregate_usage: nil,
-        amount: 2300,
-        billing_scheme: "per_unit",
-        created: 1466698898,
-        currency: currency,
-        interval: "month",
-        interval_count: 1,
-        livemode: false,
-        metadata: {},
-        nickname: "My Mock Plan",
-        product: "mock_prod_NONEXIST", # override this with your own existing product id
-        tiers: nil,
-        tiers_mode: nil,
-        transform_usage: nil,
-        trial_period_days: nil,
-        usage_type: "licensed"
-      }.merge(params)
-    end
-
     def self.mock_price(params={})
       currency = params[:currency] || StripeMock.default_currency
       {
