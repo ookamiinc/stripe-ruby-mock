@@ -59,13 +59,16 @@ module StripeMock
         params
       end
 
-      def add_subscription_to_customer(cus, sub)
+      def add_subscription_to_customer(cus, sub, pi=nil)
         if sub[:trial_end].nil? || sub[:trial_end] == "now"
           id = new_id('ch')
           charges[id] = Data.mock_charge(
-            :id => id,
-            :customer => cus[:id],
-            :amount => (sub[:price] ? sub[:price][:unit_amount] : total_items_amount(sub[:items][:data]))
+            id: id,
+            customer: cus[:id],
+            amount: (sub[:price] ? sub[:price][:unit_amount] : total_items_amount(sub[:items][:data])),
+            description: sub[:description] || nil,
+            invoice: sub[:latest_invoice] || nil,
+            payment_intent: pi
           )
         end
 
