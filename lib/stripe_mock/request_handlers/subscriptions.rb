@@ -157,7 +157,7 @@ module StripeMock
           })
           payment_intent = intent[:id]
         end
-        invoice = Data.mock_invoice([], { id: new_id('in'), payment_intent: payment_intent })
+        invoice = Stripe::Invoice.create(subscription: subscription[:id], payment_intent: payment_intent)
         subscription[:latest_invoice] = invoice[:id]
 
         subscriptions[subscription[:id]] = subscription
