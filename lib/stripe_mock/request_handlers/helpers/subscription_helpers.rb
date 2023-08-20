@@ -15,10 +15,11 @@ module StripeMock
           if matching_item
             matching_item[:quantity] ||= 1
             matching_item[:id] ||= new_id('si')
+            matching_item[:subscription] ||= subscription[:id]
             params = matching_item.merge(price: price)
             Data.mock_subscription_item(params)
           else
-            params = { price: price, id: new_id('si') }
+            params = { price: price, id: new_id('si'), subscription: subscription[:id] }
             Data.mock_subscription_item(params)
           end
         end
