@@ -86,9 +86,9 @@ module StripeMock
 
         prorating = false
         subscription_proration_date = nil
-        subscription_price_id = params[:subscription_price] || subscription[:price][:id]
+        subscription_price_id = params[:subscription_price] || subscription[:items][:data][0][:price][:id]
         subscription_quantity = params[:subscription_quantity] || subscription[:quantity]
-        if subscription_price_id != subscription[:price][:id] || subscription_quantity != subscription[:quantity]
+        if subscription_price_id != subscription[:items][:data][0][:price][:id] || subscription_quantity != subscription[:items][:data][0][:quantity]
           prorating = true
           invoice_date = Time.now.to_i
           subscription_price = assert_existence :price, subscription_price_id, prices[subscription_price_id.to_s]
@@ -106,7 +106,7 @@ module StripeMock
 
         if prorating
           unused_amount = (
-            subscription[:price][:unit_amount].to_f *
+            subscription[:items][:data][0][:price][:unit_amount].to_f *
               subscription[:quantity] *
               (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
             ).ceil
@@ -115,18 +115,18 @@ module StripeMock
                                    id: new_id('ii'),
                                    amount: -unused_amount,
                                    description: 'Unused time',
-                                   price: subscription[:price],
+                                   price: subscription[:items][:data][0][:price],
                                    period: {
                                        start: subscription_proration_date.to_i,
                                        end: subscription[:current_period_end]
                                    },
-                                   quantity: subscription[:quantity],
+                                   quantity: subscription[:items][:data][0][:quantity],
                                    proration: true
           )
 
           preview_price = assert_existence :price, params[:subscription_price], prices[params[:subscription_price]]
-          if preview_price[:interval] == subscription[:price][:interval] && preview_price[:interval_count] == subscription[:price][:interval_count] && params[:subscription_trial_end].nil?
-            remaining_amount = preview_price[:amount] * subscription_quantity * (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
+          if preview_price[:interval] == subscription[:items][:data][0][:price][:recurring][:interval] && preview_price[:interval_count] == subscription[:items][:data][0][:price][:recurring][:interval_count] && params[:subscription_trial_end].nil?
+            remaining_amount = preview_price[:unit_amount] * subscription_quantity * (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
             invoice_lines << Data.mock_line_item(
                                      id: new_id('ii'),
                                      amount: remaining_amount,
@@ -163,13 +163,13 @@ module StripeMock
         Data.mock_line_item(
           id: subscription[:id],
           type: "subscription",
-          price: subscription[:price],
-          amount: subscription[:status] == 'trialing' ? 0 : subscription[:price][:unit_amount] * subscription[:quantity],
+          price: subscription[:items][:data][0][:price],
+          amount: subscription[:status] == 'trialing' ? 0 : subscription[:items][:data][0][:price][:unit_amount] * subscription[:items][:data][0][:quantity],
           discountable: true,
-          quantity: subscription[:quantity],
+          quantity: subscription[:items][:data][0][:quantity],
           period: {
             start: subscription[:current_period_end],
-            end: get_ending_time(subscription[:current_period_start], subscription[:price], 2)
+            end: get_ending_time(subscription[:current_period_start], subscription[:items][:data][0][:price], 2)
           })
       end
 
