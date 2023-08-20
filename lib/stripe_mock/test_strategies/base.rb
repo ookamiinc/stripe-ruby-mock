@@ -21,12 +21,8 @@ module StripeMock
         Stripe::Product.retrieve(product_id)
       end
 
-      def list_plans(limit)
+      def list_prices(limit)
         Stripe::Price.list(limit: limit)
-      end
-
-      def create_plan(params = {})
-        create_price(params)
       end
 
       def create_price(params = {})

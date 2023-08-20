@@ -514,7 +514,7 @@ module StripeMock
             amount: 10
           }
         ],
-        quantity: nil,
+        quantity: 1,
         subscription: SUBSCRIPTION_ID,
         price: mock_price,
         description: "Test invoice item",
@@ -633,8 +633,8 @@ module StripeMock
         tiers_mode: nil,
         transform_quantity: nil,
         type: "recurring",
-        unit_amount: 2000,
-        unit_amount_decimal: "2000"
+        unit_amount: 1000,
+        unit_amount_decimal: "1000"
       }.merge(params)
     end
 

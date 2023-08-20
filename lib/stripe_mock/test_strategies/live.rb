@@ -11,21 +11,21 @@ module StripeMock
 
       def delete_product(product_id)
         product = Stripe::Product.retrieve(product_id)
-        Stripe::Plan.list(product: product_id).each(&:delete) if product.type == 'service'
+        Stripe::Price.list(product: product_id).each(&:delete) if product.type == 'service'
         product.delete
       rescue Stripe::StripeError => e
         # do nothing
       end
 
-      def create_plan(params={})
-        raise "create_plan requires an :id" if params[:id].nil?
-        delete_plan(params[:id])
-        Stripe::Plan.create create_plan_params(params)
+      def create_price(params={})
+        raise "create_price requires an :id" if params[:id].nil?
+        delete_price(params[:id])
+        Stripe::Price.create create_price_params(params)
       end
 
-      def delete_plan(plan_id)
-        plan = Stripe::Plan.retrieve(plan_id)
-        plan.delete
+      def delete_price(price_id)
+        price = Stripe::Price.retrieve(price_id)
+        price.delete
       rescue Stripe::StripeError => e
         # do nothing
       end

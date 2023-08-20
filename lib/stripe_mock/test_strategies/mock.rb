@@ -10,11 +10,11 @@ module StripeMock
         end
       end
 
-      def delete_plan(plan_id)
+      def delete_price(price_id)
         if StripeMock.state == 'remote'
-          StripeMock.client.destroy_resource('plans', plan_id)
+          StripeMock.client.destroy_resource('prices', price_id)
         elsif StripeMock.state == 'local'
-          StripeMock.instance.plans.delete(plan_id)
+          StripeMock.instance.prices.delete(price_id)
         end
       end
 
