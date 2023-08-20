@@ -152,10 +152,10 @@ module StripeMock
           intent_status = subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
           intent = Data.mock_payment_intent({
             status: intent_status,
-            amount: subscription[:price][:unit_amount],
-            currency: subscription[:price][:currency]
+            amount: subscription[:items][:data][0][:price][:unit_amount],
+            currency: subscription[:items][:data][0][:price][:currency]
           })
-          payment_intent = intent.id
+          payment_intent = intent[:id]
         end
         invoice = Data.mock_invoice([], { payment_intent: payment_intent })
         subscription[:latest_invoice] = invoice
