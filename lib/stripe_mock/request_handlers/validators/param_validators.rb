@@ -35,18 +35,8 @@ module StripeMock
       end
 
       #
-      # PlanValidator
+      # PriceValidator
       #
-
-      def missing_plan_amount_message
-        "Plans require an `amount` parameter to be set."
-      end
-
-      SUPPORTED_PLAN_INTERVALS = ["month", "year", "week", "day"]
-
-      def invalid_plan_interval_message
-        "Invalid interval: must be one of day, month, week, or year"
-      end
 
       SUPPORTED_CURRENCIES = [
         "usd", "aed", "afn", "all", "amd", "ang", "aoa", "ars", "aud", "awg", "azn", "bam", "bbd", "bdt", "bgn",
@@ -63,47 +53,6 @@ module StripeMock
 
       def invalid_currency_message(my_val)
         "Invalid currency: #{my_val.downcase}. Stripe currently supports these currencies: #{SUPPORTED_CURRENCIES.join(", ")}"
-      end
-
-      def validate_create_plan_params(params)
-        plan_id = params[:id].to_s
-        product_id = params[:product]
-
-        @base_strategy.create_plan_params.keys.each do |attr_name|
-          message =
-            if attr_name == :amount
-              "Plans require an `#{attr_name}` parameter to be set."
-            else
-              "Missing required param: #{attr_name}."
-            end
-          raise Stripe::InvalidRequestError.new(message, attr_name) if params[attr_name].nil?
-        end
-
-        if plans[plan_id]
-          message = already_exists_message(Stripe::Plan)
-          raise Stripe::InvalidRequestError.new(message, :id)
-        end
-
-        unless products[product_id]
-          message = not_found_message(Stripe::Product, product_id)
-          raise Stripe::InvalidRequestError.new(message, :product)
-        end
-
-        unless SUPPORTED_PLAN_INTERVALS.include?(params[:interval])
-          message = invalid_plan_interval_message
-          raise Stripe::InvalidRequestError.new(message, :interval)
-        end
-
-        unless SUPPORTED_CURRENCIES.include?(params[:currency])
-          message = invalid_currency_message(params[:currency])
-          raise Stripe::InvalidRequestError.new(message, :currency)
-        end
-
-        unless params[:amount].integer?
-          message = invalid_integer_message(params[:amount])
-          raise Stripe::InvalidRequestError.new(message, :amount)
-        end
-
       end
 
       def validate_create_price_params(params)
