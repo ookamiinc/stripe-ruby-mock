@@ -402,11 +402,11 @@ module StripeMock
             object: 'subscription_item',
             price: mock_price,
             quantity: 1,
-            subscription: mock_subscription[:id],
+            subscription: id,
             tax_rates: []
           }]
         },
-        latest_invoice: mock_invoice[:id]
+        latest_invoice: mock_invoice[:id],
         livemode: false,
         metadata: {},
         next_pending_invoice_item_invoice: nil,
