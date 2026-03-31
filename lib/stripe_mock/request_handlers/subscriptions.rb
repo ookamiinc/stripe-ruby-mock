@@ -361,6 +361,8 @@ module StripeMock
       def get_subscription_plans_from_params(params)
         plan_ids = if params[:plan]
                      [params[:plan].to_s]
+                   elsif params[:price]
+                     [params[:price].to_s]
                    elsif params[:items]
                      items = params[:items]
                      items = items.values if items.respond_to?(:values)
