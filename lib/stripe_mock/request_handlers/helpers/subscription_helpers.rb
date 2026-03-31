@@ -78,11 +78,44 @@ module StripeMock
           else
             total_items_amount(sub[:items][:data])
           end
+
+          # Create an invoice for the subscription charge
+          in_id = new_id('in')
+          item_data = sub[:items][:data][0]
+          plan_or_price = item_data[:plan] || item_data[:price]
+          invoice_line = Data.mock_line_item(
+            id: sub[:id],
+            type: "subscription",
+            plan: plan_or_price,
+            price: item_data[:price],
+            amount: amount,
+            quantity: sub[:quantity],
+            subscription: sub[:id],
+            metadata: sub[:metadata] || {}
+          )
+          invoice = Data.mock_invoice([invoice_line],
+            id: in_id,
+            customer: cus[:id],
+            customer_name: cus[:name],
+            subscription: sub[:id],
+            metadata: sub[:metadata] || {}
+          )
+          invoices[in_id] = invoice
+
+          pi_id = new_id('pi')
           charges[id] = Data.mock_charge(
             :id => id,
             :customer => cus[:id],
-            :amount => amount
+            :amount => amount,
+            :invoice => in_id,
+            :payment_intent => pi_id,
+            :description => sub[:description]
           )
+
+          # Set latest_invoice - keep expanded hash if already set via expand param
+          unless sub[:latest_invoice].is_a?(Hash)
+            sub[:latest_invoice] = in_id
+          end
         end
 
         item_data = sub[:items][:data][0]

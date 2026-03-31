@@ -115,8 +115,12 @@ shared_examples 'Invoice API' do
       response = Stripe::Invoice.search({query: 'currency:"gbp"'}, stripe_version: '2020-08-27')
       expect(response.data.map(&:id)).to match_array([two.id])
 
+      # subscription creation also creates an invoice
+      sub_invoice_ids = response = Stripe::Invoice.search({query: %(subscription:"#{subscription.id}")}, stripe_version: '2020-08-27')
+        .data.map(&:id) - [one.id, two.id]
+
       response = Stripe::Invoice.search({query: %(customer:"#{customer.id}")}, stripe_version: '2020-08-27')
-      expect(response.data.map(&:id)).to match_array([one.id, two.id])
+      expect(response.data.map(&:id)).to match_array([one.id, two.id] + sub_invoice_ids)
 
       response = Stripe::Invoice.search({query: 'number:"one-1"'}, stripe_version: '2020-08-27')
       expect(response.data.map(&:id)).to match_array([one.id])
@@ -125,7 +129,7 @@ shared_examples 'Invoice API' do
       expect(response.data.map(&:id)).to match_array([two.id])
 
       response = Stripe::Invoice.search({query: %(subscription:"#{subscription.id}")}, stripe_version: '2020-08-27')
-      expect(response.data.map(&:id)).to match_array([one.id, two.id])
+      expect(response.data.map(&:id)).to match_array([one.id, two.id] + sub_invoice_ids)
 
       response = Stripe::Invoice.search({query: 'total:1000'}, stripe_version: '2020-08-27')
       expect(response.data.map(&:id)).to match_array([one.id, two.id])
