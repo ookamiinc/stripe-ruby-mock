@@ -1610,5 +1610,77 @@ shared_examples 'Customer Subscriptions with prices' do
       expect(subscriptions.data.first.metadata.foo).to eq( "bar" )
       expect(subscriptions.data.first.metadata.example).to eq( "yes" )
     end
+
+    it "adds a new subscription using top-level price param" do
+      customer = Stripe::Customer.create(source: gen_card_tk)
+
+      subscription = Stripe::Subscription.create({
+        customer: customer.id,
+        price: price.id
+      })
+
+      expect(subscription.object).to eq('subscription')
+      expect(subscription.plan.to_hash).to eq(price.to_hash)
+      expect(subscription.items.first.price.to_hash).to eq(price.to_hash)
+    end
+
+    it "creates a subscription with a description" do
+      customer = Stripe::Customer.create(source: gen_card_tk)
+
+      subscription = Stripe::Subscription.create({
+        customer: customer.id,
+        items: [{ price: price.id }],
+        description: "My test subscription"
+      })
+
+      expect(subscription.description).to eq("My test subscription")
+    end
+
+    it "creates a subscription with a free price without a card" do
+      free_price = stripe_helper.create_price(product: product.id, amount: 0, currency: 'usd')
+      customer = Stripe::Customer.create
+
+      subscription = Stripe::Subscription.create({
+        customer: customer.id,
+        items: [{ price: free_price.id }]
+      })
+
+      expect(subscription.object).to eq('subscription')
+      expect(subscription.status).to eq('active')
+    end
+  end
+
+  context "updating a subscription" do
+    it "updates a subscription to a different price" do
+      customer = Stripe::Customer.create(source: gen_card_tk)
+      price2 = stripe_helper.create_price(product: product.id, amount: 9999, currency: 'usd')
+
+      subscription = Stripe::Subscription.create({
+        customer: customer.id,
+        items: [{ price: price.id }]
+      })
+
+      updated = Stripe::Subscription.update(subscription.id, {
+        items: [{ price: price2.id }]
+      })
+
+      expect(updated.plan.to_hash).to eq(price2.to_hash)
+      expect(updated.items.first.price.to_hash).to eq(price2.to_hash)
+    end
+  end
+
+  context "canceling a subscription" do
+    it "cancels a price-based subscription" do
+      customer = Stripe::Customer.create(source: gen_card_tk)
+
+      subscription = Stripe::Subscription.create({
+        customer: customer.id,
+        items: [{ price: price.id }]
+      })
+
+      result = Stripe::Subscription.cancel(subscription.id)
+      expect(result.status).to eq('canceled')
+      expect(result.canceled_at).to_not be_nil
+    end
   end
 end
