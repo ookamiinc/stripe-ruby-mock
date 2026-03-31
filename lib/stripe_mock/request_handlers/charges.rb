@@ -51,6 +51,8 @@ module StripeMock
 
         balance_transaction_id = new_balance_transaction('txn', bal_trans_params)
 
+        params[:payment_intent] ||= new_id('pi')
+
         charges[id] = Data.mock_charge(
             params.merge :id => id,
             :balance_transaction => balance_transaction_id)
