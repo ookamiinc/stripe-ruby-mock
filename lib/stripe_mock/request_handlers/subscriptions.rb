@@ -392,16 +392,17 @@ module StripeMock
         return if subscription[:default_payment_method]
 
         plan_trial_period_days = plan[:trial_period_days] || 0
-        plan_has_trial = plan_trial_period_days != 0 || plan[:amount] == 0 || plan[:trial_end]
+        plan_amount = plan[:amount] || plan[:unit_amount] || 0
+        plan_has_trial = plan_trial_period_days != 0 || plan_amount == 0 || plan[:trial_end]
         return if plan && plan_has_trial
 
         return if subscription && subscription[:trial_end] && subscription[:trial_end] != 'now'
 
         if subscription[:items]
           trial = subscription[:items][:data].none? do |item|
-            plan = item[:plan]
-            (plan[:trial_period_days].nil? || plan[:trial_period_days] == 0) &&
-              (plan[:trial_end].nil? || plan[:trial_end] == 'now')
+            p = item[:plan] || item[:price]
+            (p[:trial_period_days].nil? || p[:trial_period_days] == 0) &&
+              (p[:trial_end].nil? || p[:trial_end] == 'now')
           end
           return if trial
         end
