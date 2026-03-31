@@ -1647,6 +1647,9 @@ shared_examples 'Customer Subscriptions with prices' do
 
       expect(subscription.object).to eq('subscription')
       expect(subscription.status).to eq('active')
+      expect(subscription.collection_method).to eq('charge_automatically')
+      expect(subscription.invoice_settings).not_to be_nil
+      expect(subscription.discounts).to eq([])
     end
   end
 

@@ -451,6 +451,7 @@ module StripeMock
         default_tax_rates: nil,
         description: nil,
         discount: nil,
+        discounts: [],
         end_at: nil,
         ended_at: nil,
         items: {
@@ -472,6 +473,10 @@ module StripeMock
             tax_rates: []
           }],
           has_more: false
+        },
+        invoice_settings: {
+          account_tax_ids: nil,
+          issuer: { type: 'self' }
         },
         latest_invoice: nil,
         livemode: false,
