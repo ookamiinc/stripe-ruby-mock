@@ -1348,7 +1348,7 @@ module StripeMock
     def self.mock_payment_method(params = {})
       payment_method_id = params[:id] || 'pm_1ExEuFL2DI6wht39WNJgbybl'
 
-      type = params[:type].to_sym
+      type = (params[:type] || 'card').to_sym
       last4 = params.dig(:card, :number)
       data = {
         card: {
