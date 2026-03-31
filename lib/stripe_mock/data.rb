@@ -392,22 +392,39 @@ module StripeMock
     def self.mock_subscription(params={})
       StripeMock::Util.rmerge({
         created: 1478204116,
+        object: 'subscription',
+        application: nil,
+        application_fee_percent: nil,
+        automatic_tax: { enabled: false },
         billing: 'charge_automatically',
+        billing_cycle_anchor: nil,
+        billing_thresholds: nil,
+        cancel_at: nil,
+        cancel_at_period_end: false,
+        canceled_at: nil,
+        cancellation_details: {
+          comment: nil,
+          feedback: nil,
+          reason: nil
+        },
+        collection_method: 'charge_automatically',
+        currency: StripeMock.default_currency,
         current_period_start: 1308595038,
         current_period_end: 1308681468,
-        status: 'trialing',
-        trial_from_plan: false,
-        plan: {
-          interval: 'month',
-          amount: 7500,
-          trial_period_days: 30,
-          object: 'plan',
-          id: '__test_plan_id__'
-        },
+        customer: 'c_test_customer',
+        days_until_due: nil,
+        default_payment_method: nil,
+        default_source: nil,
+        default_tax_rates: nil,
+        description: nil,
+        discount: nil,
+        end_at: nil,
+        ended_at: nil,
         items: {
           object: 'list',
           data: [{
             id: 'si_1AwFf62eZvKYlo2C9u6Dhf9',
+            billing_thresholds: nil,
             created: 1504035973,
             metadata: {},
             object: 'subscription_item',
@@ -416,39 +433,48 @@ module StripeMock
               created: 1504035972,
               currency: StripeMock.default_currency
             },
-            quantity: 1
+            price: mock_price,
+            quantity: 1,
+            subscription: params[:id],
+            tax_rates: []
           }],
           has_more: false
         },
-        cancel_at_period_end: false,
-        canceled_at: nil,
-        collection_method: 'charge_automatically',
-        cancellation_details: {
-          comment: nil,
-          feedback: nil,
-          reason: nil
+        latest_invoice: nil,
+        livemode: false,
+        metadata: {},
+        next_pending_invoice_item_invoice: nil,
+        on_behalf_of: nil,
+        pause_collection: nil,
+        payment_settings: {
+          payment_method_options: nil,
+          payment_method_types: nil,
+          save_default_payment_method: 'off'
         },
-        ended_at: nil,
+        pending_invoice_item_interval: nil,
+        pending_setup_intent: nil,
+        pending_update: nil,
+        plan: {
+          interval: 'month',
+          amount: 7500,
+          trial_period_days: 30,
+          object: 'plan',
+          id: '__test_plan_id__'
+        },
+        quantity: 1,
         schedule: nil,
         start_date: 1308595038,
-        object: 'subscription',
-        trial_start: 1308595038,
-        trial_end: 1308681468,
-        customer: 'c_test_customer',
-        quantity: 1,
+        status: 'trialing',
         tax_percent: nil,
-        discount: nil,
-        metadata: {},
-        default_tax_rates: nil,
-        default_payment_method: nil,
-        pending_invoice_item_interval: nil,
-        next_pending_invoice_item_invoice: nil,
-        pending_setup_intent: nil,
-        latest_invoice: nil,
-        application_fee_percent: nil,
-        cancel_at: nil,
-        end_at: nil,
-        pause_collection: nil
+        test_clock: nil,
+        trial_end: 1308681468,
+        trial_from_plan: false,
+        trial_settings: {
+          end_behavior: {
+            missing_payment_method: 'create_invoice'
+          }
+        },
+        trial_start: 1308595038
       }, params)
     end
 
