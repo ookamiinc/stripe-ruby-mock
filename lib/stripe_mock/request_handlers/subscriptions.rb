@@ -248,7 +248,7 @@ module StripeMock
 
         # subscription plans are not being updated but load them for the response
         if subscription_plans.empty?
-          subscription_plans = subscription[:items][:data].map { |item| item[:plan] }
+          subscription_plans = subscription[:items][:data].map { |item| item[:plan] || item[:price] }
         end
 
         if params[:coupon]
@@ -306,11 +306,12 @@ module StripeMock
         params[:current_period_start] = subscription[:current_period_start]
         params[:trial_end] = params[:trial_end] || subscription[:trial_end]
 
-        plan_amount_was = subscription.dig(:plan, :amount)
+        plan_amount_was = subscription.dig(:plan, :amount) || subscription.dig(:plan, :unit_amount) || subscription.dig(:items, :data, 0, :price, :unit_amount)
 
         subscription = resolve_subscription_changes(subscription, subscription_plans, customer, params)
 
-        verify_card_present(customer, subscription_plans.first, subscription, params) if plan_amount_was == 0 && subscription.dig(:plan, :amount) && subscription.dig(:plan, :amount) > 0
+        current_amount = subscription.dig(:plan, :amount) || subscription.dig(:plan, :unit_amount) || subscription.dig(:items, :data, 0, :price, :unit_amount)
+        verify_card_present(customer, subscription_plans.first, subscription, params) if plan_amount_was == 0 && current_amount && current_amount > 0
 
         # delete the old subscription, replace with the new subscription
         customer[:subscriptions][:data].reject! { |sub| sub[:id] == subscription[:id] }
