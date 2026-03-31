@@ -175,11 +175,12 @@ module StripeMock
         if (s = params[:expand]&.find { |s| s.start_with? 'latest_invoice' })
           payment_intent = nil
           unless subscription[:status] == 'trialing'
+            plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
             intent_status = subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
             intent = Data.mock_payment_intent({
               status: intent_status,
-              amount: subscription[:plan][:amount],
-              currency: subscription[:plan][:currency]
+              amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
+              currency: plan_or_price[:currency]
             })
             payment_intent = s.include?('latest_invoice.payment_intent') ? intent : intent.id
           end
