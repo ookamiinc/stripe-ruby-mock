@@ -47,6 +47,7 @@ module StripeMock
         end
 
         ensure_required_params(params)
+        params[:payment_method] ||= new_id('pm')
         bal_trans_params = { amount: params[:amount], source: id, application_fee: params[:application_fee] }
 
         balance_transaction_id = new_balance_transaction('txn', bal_trans_params)
