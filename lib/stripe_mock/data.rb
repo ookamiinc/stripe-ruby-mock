@@ -1397,6 +1397,7 @@ module StripeMock
           shipping: nil,
           source: nil,
           statement_descriptor: nil,
+          statement_descriptor_suffix: nil,
           status: "requires_action",
           transfer_data: nil,
           transfer_group: nil

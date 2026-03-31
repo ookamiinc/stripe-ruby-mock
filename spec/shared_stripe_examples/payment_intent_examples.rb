@@ -12,9 +12,12 @@ shared_examples 'PaymentIntent API' do
 
     expect(payment_intent.id).to match(/^test_pi/)
     expect(payment_intent.amount).to eq(100)
+    expect(payment_intent.amount_received).to eq(100)
     expect(payment_intent.currency).to eq('usd')
     expect(payment_intent.metadata.to_hash).to eq({})
     expect(payment_intent.status).to eq('succeeded')
+    expect(payment_intent.statement_descriptor).to be_nil
+    expect(payment_intent.statement_descriptor_suffix).to be_nil
   end
 
   it "creates a requires_action stripe payment_intent when amount matches 3184" do

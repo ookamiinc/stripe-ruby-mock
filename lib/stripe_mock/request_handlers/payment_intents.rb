@@ -26,10 +26,12 @@ module StripeMock
           'succeeded'
         end
         last_payment_error = params[:amount] == 3178 ? last_payment_error_generator(code: 'card_declined', decline_code: 'insufficient_funds', message: 'Not enough funds.') : nil
+        amount_received = status == 'succeeded' ? params[:amount] : 0
         payment_intents[id] = Data.mock_payment_intent(
           params.merge(
             id: id,
             status: status,
+            amount_received: amount_received,
             last_payment_error: last_payment_error
           )
         )
@@ -180,6 +182,7 @@ module StripeMock
 
       def succeeded_payment_intent(payment_intent)
         payment_intent[:status] = 'succeeded'
+        payment_intent[:amount_received] = payment_intent[:amount]
         btxn = new_balance_transaction('txn', { source: payment_intent[:id] })
 
         charge_id = new_id('ch')
