@@ -6,6 +6,11 @@ shared_examples 'Invoice API' do
     it "creates a stripe invoice" do
       invoice = Stripe::Invoice.create
       expect(invoice.id).to match(/^test_in/)
+      expect(invoice.status).to eq('draft')
+      expect(invoice.billing_reason).to eq('manual')
+      expect(invoice.collection_method).to eq('charge_automatically')
+      expect(invoice.payment_intent).to be_nil
+      expect(invoice.amount_remaining).to eq(invoice.amount_due)
     end
 
     it "stores a created stripe invoice in memory" do

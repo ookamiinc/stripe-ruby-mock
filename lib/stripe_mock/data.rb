@@ -512,9 +512,11 @@ module StripeMock
       lines << Data.mock_line_item() if lines.empty?
       invoice = {
         id: 'in_test_invoice',
-        status: 'open',
-        invoice_pdf: 'pdf_url',
-        hosted_invoice_url: 'hosted_invoice_url',
+        status: 'draft',
+        billing_reason: 'manual',
+        collection_method: 'charge_automatically',
+        invoice_pdf: nil,
+        hosted_invoice_url: nil,
         created: 1349738950,
         period_end: 1349738950,
         period_start: 1349738950,
@@ -545,12 +547,14 @@ module StripeMock
         attempt_count: 0,
         amount_due: 100,
         amount_paid: 0,
+        amount_remaining: 100,
         currency: currency,
         starting_balance: 0,
         ending_balance: 0,
         next_payment_attempt: 1349825350,
         charge: nil,
         discount: nil,
+        payment_intent: nil,
         subscription: nil,
         number: "6C41730-0001"
       }.merge(params)
@@ -562,6 +566,7 @@ module StripeMock
       end
       due = invoice[:total] + invoice[:starting_balance]
       invoice[:amount_due] = due < 0 ? 0 : due
+      invoice[:amount_remaining] = invoice[:amount_due] - invoice[:amount_paid]
       invoice[:ending_balance] = invoice[:starting_balance] + invoice[:total] if invoice[:amount_due] == 0
       invoice
     end
