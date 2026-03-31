@@ -18,6 +18,10 @@ shared_examples 'Customer API' do
     expect(customer.email).to eq('johnny@appleseed.com')
     expect(customer.description).to eq('a description')
     expect(customer.preferred_locales).to eq([])
+    expect(customer.address).to be_nil
+    expect(customer.balance).to eq(0)
+    expect(customer.phone).to be_nil
+    expect(customer.tax_exempt).to eq('none')
 
     expect(customer.sources.count).to eq(1)
     expect(customer.sources.data.length).to eq(1)

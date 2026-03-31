@@ -180,17 +180,22 @@ module StripeMock
         object: "customer",
         created: 1372126710,
         id: cus_id,
+        address: nil,
+        balance: 0,
         name: nil,
+        phone: nil,
         preferred_locales: [],
         livemode: false,
         delinquent: false,
         discount: nil,
         account_balance: 0,
         currency: currency,
+        tax_exempt: 'none',
         invoice_settings: {
           default_payment_method: nil,
           custom_fields: nil,
-          footer: nil
+          footer: nil,
+          rendering_options: nil
         },
         sources: {
           object: "list",
