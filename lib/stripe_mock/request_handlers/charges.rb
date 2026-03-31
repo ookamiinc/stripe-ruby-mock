@@ -142,6 +142,7 @@ module StripeMock
         end
 
         charge[:captured] = true
+        charge[:amount_captured] = params[:amount] || charge[:amount]
         charge
       end
 

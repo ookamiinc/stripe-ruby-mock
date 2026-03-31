@@ -437,6 +437,7 @@ shared_examples 'Charge API' do
       })
 
       expect(charge.captured).to eq(false)
+      expect(charge.amount_captured).to eq(0)
     end
   end
 
@@ -453,6 +454,7 @@ shared_examples 'Charge API' do
       expect(charge.captured).to eq(true)
       expect(returned_charge.id).to eq(charge.id)
       expect(returned_charge.captured).to eq(true)
+      expect(returned_charge.amount_captured).to eq(777)
     end
 
     it "captures with specified amount" do
