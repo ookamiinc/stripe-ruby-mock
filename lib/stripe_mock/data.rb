@@ -561,6 +561,7 @@ module StripeMock
         quantity: nil,
         subscription: nil,
         plan: nil,
+        price: nil,
         description: "Test invoice item",
         metadata: {}
       }.merge(params)
@@ -1281,6 +1282,7 @@ module StripeMock
       {
         id: id,
         object: 'subscription_item',
+        billing_thresholds: nil,
         created: 1504716183,
         metadata: {},
         plan: {
@@ -1297,8 +1299,10 @@ module StripeMock
           statement_descriptor: nil,
           trial_period_days: nil
         },
+        price: mock_price,
         quantity: 2,
-        price: mock_price
+        subscription: params[:subscription],
+        tax_rates: []
       }.merge(params)
     end
 
