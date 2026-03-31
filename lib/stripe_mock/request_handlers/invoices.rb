@@ -99,12 +99,14 @@ module StripeMock
 
         prorating = false
         subscription_proration_date = nil
-        subscription_plan_id = params[:subscription_plan] || subscription[:plan][:id]
+        current_plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
+        subscription_plan_id = params[:subscription_plan] || current_plan_or_price[:id]
         subscription_quantity = params[:subscription_quantity] || subscription[:quantity]
-        if subscription_plan_id != subscription[:plan][:id] || subscription_quantity != subscription[:quantity]
+        if subscription_plan_id != current_plan_or_price[:id] || subscription_quantity != subscription[:quantity]
           prorating = true
           invoice_date = Time.now.to_i
-          subscription_plan = assert_existence :plan, subscription_plan_id, plans[subscription_plan_id.to_s]
+          subscription_plan = plans[subscription_plan_id.to_s] || prices[subscription_plan_id.to_s]
+          assert_existence :plan, subscription_plan_id, subscription_plan unless subscription_plan
           preview_subscription = Data.mock_subscription
           preview_subscription = resolve_subscription_changes(preview_subscription, [subscription_plan], customer, { trial_end: params[:subscription_trial_end] })
           preview_subscription[:id] = subscription[:id]
@@ -118,7 +120,7 @@ module StripeMock
         invoice_lines = []
 
         if prorating
-          plan_amount = subscription[:plan][:amount] || subscription[:plan][:unit_amount]
+          plan_amount = current_plan_or_price[:amount] || current_plan_or_price[:unit_amount]
           unused_amount = (
             plan_amount.to_f *
               subscription[:quantity] *
@@ -129,7 +131,7 @@ module StripeMock
                                    id: new_id('ii'),
                                    amount: -unused_amount,
                                    description: 'Unused time',
-                                   plan: subscription[:plan],
+                                   plan: current_plan_or_price,
                                    period: {
                                        start: subscription_proration_date.to_i,
                                        end: subscription[:current_period_end]
@@ -138,9 +140,14 @@ module StripeMock
                                    proration: true
           )
 
-          preview_plan = assert_existence :plan, params[:subscription_plan], plans[params[:subscription_plan]]
-          if preview_plan[:interval] == subscription[:plan][:interval] && preview_plan[:interval_count] == subscription[:plan][:interval_count] && params[:subscription_trial_end].nil?
-            remaining_amount = preview_plan[:amount] * subscription_quantity * (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
+          preview_plan = plans[params[:subscription_plan]] || prices[params[:subscription_plan]]
+          assert_existence :plan, params[:subscription_plan], preview_plan unless preview_plan
+          current_interval = current_plan_or_price[:interval] || current_plan_or_price.dig(:recurring, :interval)
+          current_interval_count = current_plan_or_price[:interval_count] || current_plan_or_price.dig(:recurring, :interval_count) || 1
+          preview_interval = preview_plan[:interval] || preview_plan.dig(:recurring, :interval)
+          preview_interval_count = preview_plan[:interval_count] || preview_plan.dig(:recurring, :interval_count) || 1
+          if preview_interval == current_interval && preview_interval_count == current_interval_count && params[:subscription_trial_end].nil?
+            remaining_amount = (preview_plan[:amount] || preview_plan[:unit_amount]) * subscription_quantity * (subscription[:current_period_end] - subscription_proration_date.to_i) / (subscription[:current_period_end] - subscription[:current_period_start])
             invoice_lines << Data.mock_line_item(
                                      id: new_id('ii'),
                                      amount: remaining_amount,
@@ -205,7 +212,8 @@ module StripeMock
             end
 
             # Add proration line items
-            plan_amount = subscription[:plan][:amount] || subscription[:plan][:unit_amount]
+            sub_plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
+            plan_amount = sub_plan_or_price[:amount] || sub_plan_or_price[:unit_amount]
             unused_amount = (
               plan_amount.to_f *
                 subscription[:quantity] *
@@ -216,7 +224,7 @@ module StripeMock
               id: new_id('ii'),
               amount: -unused_amount,
               description: 'Unused time',
-              plan: subscription[:plan],
+              plan: sub_plan_or_price,
               period: {
                 start: subscription_proration_date.to_i,
                 end: subscription[:current_period_end]
@@ -267,18 +275,19 @@ module StripeMock
       private
 
       def get_mock_subscription_line_item(subscription)
-        plan_amount = subscription[:plan][:amount] || subscription[:plan][:unit_amount]
+        plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
+        plan_amount = plan_or_price[:amount] || plan_or_price[:unit_amount]
 
         Data.mock_line_item(
           id: subscription[:id],
           type: "subscription",
-          plan: subscription[:plan],
+          plan: plan_or_price,
           amount: subscription[:status] == 'trialing' ? 0 : plan_amount * subscription[:quantity],
           discountable: true,
           quantity: subscription[:quantity],
           period: {
             start: subscription[:current_period_end],
-            end: get_ending_time(subscription[:current_period_start], subscription[:plan], 2)
+            end: get_ending_time(subscription[:current_period_start], plan_or_price, 2)
           })
       end
 
