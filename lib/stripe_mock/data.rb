@@ -244,7 +244,6 @@ module StripeMock
         calculated_statement_descriptor: nil,
         currency: currency,
         destination: nil,
-        disputed: false,
         fraud_details: {},
         payment_method_details: {
           card: {
