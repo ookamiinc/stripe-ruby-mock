@@ -490,7 +490,8 @@ module StripeMock
         return unless plan_or_price
 
         pi_value = nil
-        unless subscription[:status] == 'trialing'
+        is_send_invoice = subscription[:collection_method] == 'send_invoice'
+        unless subscription[:status] == 'trialing' || is_send_invoice
           pi_status = if pi_status_override
                         pi_status_override
                       elsif subscription[:status] == 'incomplete'
@@ -510,7 +511,6 @@ module StripeMock
         end
 
         is_incomplete = subscription[:status] == 'incomplete'
-        is_send_invoice = subscription[:collection_method] == 'send_invoice'
         invoice_status = if is_send_invoice
                            'draft'
                          elsif is_incomplete

@@ -1420,6 +1420,25 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(updated.default_payment_method).to eq(pm.id)
   end
 
+  it "does not create payment_intent for send_invoice subscription update" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    new_plan = stripe_helper.create_plan(id: 'konbini_plan', product: product.id)
+    updated = Stripe::Subscription.update(sub.id, {
+      items: [{ id: sub.items.data.first.id, deleted: true }, { plan: new_plan.id }],
+      collection_method: 'send_invoice',
+      days_until_due: 3,
+      billing_cycle_anchor: 'now',
+      expand: ['latest_invoice.payment_intent']
+    })
+    expect(updated.latest_invoice).to be_a(Stripe::StripeObject)
+    expect(updated.latest_invoice.payment_intent).to be_nil
+  end
+
   it "updates subscription to incomplete on card decline" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     sub = Stripe::Subscription.create(
