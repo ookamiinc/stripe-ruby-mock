@@ -14,7 +14,7 @@ module StripeMock
 
       # post /v1/payment_methods
       def new_payment_method(route, method_url, params, headers)
-        id = new_id('pm')
+        id = params[:id] || new_id('pm')
 
         ensure_payment_method_required_params(params)
 

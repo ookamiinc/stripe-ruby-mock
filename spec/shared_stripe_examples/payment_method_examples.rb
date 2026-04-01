@@ -62,6 +62,15 @@ shared_examples 'PaymentMethod API' do
         expect(payment_method.id).to match(/^test_pm/)
       end
 
+      it 'respects custom id param' do
+        pm = Stripe::PaymentMethod.create(
+          type: 'card',
+          id: 'pm_custom_id',
+          card: { number: '4242424242424242', exp_month: 12, exp_year: 2030, cvc: '123' }
+        )
+        expect(pm.id).to eq('pm_custom_id')
+      end
+
       it 'includes created timestamp' do
         expect(payment_method.created).to be_a(Integer)
         expect(payment_method.created).to be > 0
