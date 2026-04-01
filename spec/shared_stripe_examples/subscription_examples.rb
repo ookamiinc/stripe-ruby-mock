@@ -1363,6 +1363,44 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.latest_invoice.payment_intent.status).to eq('requires_payment_method')
   end
 
+  it "updates subscription to incomplete on card decline" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    expect(sub.status).to eq('active')
+
+    new_plan = stripe_helper.create_plan(id: 'new_plan', product: product.id)
+    StripeMock.prepare_card_error(:card_declined, :update_subscription)
+    updated = Stripe::Subscription.update(sub.id, {
+      items: [{ id: sub.items.data.first.id, deleted: true }, { plan: new_plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    })
+    expect(updated.status).to eq('incomplete')
+    expect(updated.latest_invoice.payment_intent.status).to eq('requires_payment_method')
+  end
+
+  it "updates subscription to incomplete with requires_action for 3DS" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    expect(sub.status).to eq('active')
+
+    new_plan = stripe_helper.create_plan(id: 'new_plan_3ds', product: product.id)
+    StripeMock.prepare_card_error(:requires_action, :update_subscription)
+    updated = Stripe::Subscription.update(sub.id, {
+      items: [{ id: sub.items.data.first.id, deleted: true }, { plan: new_plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    })
+    expect(updated.status).to eq('incomplete')
+    expect(updated.latest_invoice.payment_intent.status).to eq('requires_action')
+  end
+
   it "creates incomplete subscription for send_invoice with draft invoice" do
     customer = Stripe::Customer.create
     sub = Stripe::Subscription.create(
