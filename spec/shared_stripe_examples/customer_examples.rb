@@ -354,6 +354,19 @@ shared_examples 'Customer API' do
     expect(all.data.map &:email).to include('one@one.com', 'two@two.com')
   end
 
+  context "email validation" do
+    it "rejects invalid email on create" do
+      expect {
+        Stripe::Customer.create(email: 'invalid email')
+      }.to raise_error(Stripe::InvalidRequestError, /Invalid email address/)
+    end
+
+    it "accepts valid email on create" do
+      customer = Stripe::Customer.create(email: 'valid@example.com')
+      expect(customer.email).to eq('valid@example.com')
+    end
+  end
+
   context "listing customers" do
     it "filters by email" do
       Stripe::Customer.create(email: 'alice@test.com')
