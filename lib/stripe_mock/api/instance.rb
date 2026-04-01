@@ -37,4 +37,16 @@ module StripeMock
   def self.instance; @instance; end
   def self.state; @state; end
 
+  # Prepare a payment action status for the next subscription operation.
+  # This simulates 3D Secure or other authentication requirements.
+  #
+  # Usage:
+  #   StripeMock.prepare_payment_action(:requires_action)
+  #   StripeMock.prepare_payment_action(:requires_payment_method)
+  def self.prepare_payment_action(status)
+    raise UnstartedStateError unless @instance
+
+    @instance.pending_payment_action = status.to_s
+  end
+
 end

@@ -1392,7 +1392,7 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.status).to eq('active')
 
     new_plan = stripe_helper.create_plan(id: 'new_plan_3ds', product: product.id)
-    StripeMock.prepare_card_error(:requires_action, :subscription_update)
+    StripeMock.prepare_payment_action(:requires_action)
     updated = Stripe::Subscription.update(sub.id, {
       items: [{ id: sub.items.data.first.id, deleted: true }, { plan: new_plan.id }],
       expand: ['latest_invoice.payment_intent']

@@ -343,16 +343,19 @@ module StripeMock
           )
         end
 
-        # Check for queued card error - set incomplete instead of raising
-        # This simulates real Stripe's behavior for 3DS and card failures
+        # Check for pending payment action (3DS) or queued card error
+        # This simulates incomplete subscriptions from authentication or decline
         card_error = @error_queue.error_for_handler_name(:subscription_update)
-        if card_error
-          @error_queue.dequeue
-          error_code = card_error.code rescue nil
+        if @pending_payment_action
           subscription[:status] = 'incomplete'
           subscriptions[subscription[:id]][:status] = 'incomplete'
-          @update_subscription_pi_status =
-            error_code == 'requires_action' ? 'requires_action' : 'requires_payment_method'
+          @update_subscription_pi_status = @pending_payment_action
+          @pending_payment_action = nil
+        elsif card_error
+          @error_queue.dequeue
+          subscription[:status] = 'incomplete'
+          subscriptions[subscription[:id]][:status] = 'incomplete'
+          @update_subscription_pi_status = 'requires_payment_method'
         else
           @update_subscription_pi_status = nil
         end

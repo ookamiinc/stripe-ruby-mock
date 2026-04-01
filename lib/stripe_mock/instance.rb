@@ -63,7 +63,7 @@ module StripeMock
                 :subscriptions, :country_spec, :subscriptions_items, :products, :tax_ids, :tax_rates, :checkout_sessions,
                 :checkout_session_line_items
 
-    attr_accessor :error_queue, :debug, :conversion_rate, :account_balance
+    attr_accessor :error_queue, :debug, :conversion_rate, :account_balance, :pending_payment_action
 
     def initialize
       @accounts = {}
@@ -101,6 +101,7 @@ module StripeMock
 
       @debug = false
       @error_queue = ErrorQueue.new
+      @pending_payment_action = nil
       @id_counter = 0
       @balance_transaction_counter = 0
       @dispute_counter = 0
