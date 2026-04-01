@@ -155,6 +155,8 @@ module StripeMock
 
         if params[:trial_period_days]
           subscription[:status] = 'trialing'
+          subscription[:trial_end] ||= Time.now.utc.to_i + params[:trial_period_days] * 86400
+          subscription[:trial_start] ||= Time.now.utc.to_i
         end
 
         if params[:payment_behavior] == 'default_incomplete'
@@ -172,28 +174,13 @@ module StripeMock
           subscription[:transfer_data][:amount_percent] ||= 100
         end
 
-        if (s = params[:expand]&.find { |s| s.start_with? 'latest_invoice' })
-          payment_intent = nil
-          unless subscription[:status] == 'trialing'
-            plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
-            intent_status = subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
-            intent = Data.mock_payment_intent({
-              status: intent_status,
-              amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
-              currency: plan_or_price[:currency]
-            })
-            payment_intent = s.include?('latest_invoice.payment_intent') ? intent : intent[:id]
-          end
-          invoice = Data.mock_invoice([], { payment_intent: payment_intent })
-          subscription[:latest_invoice] = invoice
-        end
-
         subscriptions[subscription[:id]] = subscription
         add_subscription_to_customer(customer, subscription)
 
-        if params[:expand]&.include?('customer')
+        if params[:expand]
           result = subscription.clone
-          result[:customer] = customer.reject { |k, _| k == :subscriptions }
+          generate_subscription_invoice_if_needed(result, params[:expand])
+          expand_subscription_fields(result, params[:expand], stripe_account)
           return result
         end
 
@@ -439,23 +426,27 @@ module StripeMock
         needs_invoice = expand_list.any? { |s| s.start_with?('latest_invoice') }
         return unless needs_invoice
 
-        invoice_value = subscription[:latest_invoice]
-        return if invoice_value.is_a?(Hash) && invoice_value[:payment_intent].is_a?(Hash)
+        # If latest_invoice is already stored, no need to generate
+        invoice_id = subscription[:latest_invoice]
+        return if invoice_id.is_a?(Hash)
+        return if invoice_id.is_a?(String) && invoices[invoice_id]
 
+        # Generate invoice for expansion (e.g., trialing subs without stored invoice)
         plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
         return unless plan_or_price
 
-        intent_status = subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
-        intent = Data.mock_payment_intent({
-          id: new_id('pi'),
-          status: intent_status,
-          amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
-          currency: plan_or_price[:currency]
-        })
-        payment_intents[intent[:id]] = intent
-
-        expand_pi = expand_list.any? { |s| s.include?('latest_invoice.payment_intent') }
-        pi_value = expand_pi ? intent : intent[:id]
+        pi_value = nil
+        unless subscription[:status] == 'trialing'
+          intent = Data.mock_payment_intent({
+            id: new_id('pi'),
+            status: subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded',
+            amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
+            currency: plan_or_price[:currency]
+          })
+          payment_intents[intent[:id]] = intent
+          expand_pi = expand_list.any? { |s| s.include?('latest_invoice.payment_intent') }
+          pi_value = expand_pi ? intent : intent[:id]
+        end
 
         invoice = Data.mock_invoice([], {
           id: new_id('in'),

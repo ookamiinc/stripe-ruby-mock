@@ -37,7 +37,7 @@ module StripeMock
         start_time = options[:current_period_start] || now
         params = { customer: cus[:id], current_period_start: start_time, created: created_time }
         params.merge!({ :plan => (plans.size == 1 ? plans.first : nil) })
-        keys_to_merge = /application_fee_percent|quantity|metadata|tax_percent|billing|days_until_due|default_tax_rates|pending_invoice_item_interval|default_payment_method|collection_method/
+        keys_to_merge = /application_fee_percent|quantity|metadata|tax_percent|billing|days_until_due|default_tax_rates|pending_invoice_item_interval|default_payment_method|collection_method|payment_settings/
         params.merge! options.select {|k,v| k =~ keys_to_merge}
 
         if options[:cancel_at_period_end] == true
@@ -103,6 +103,14 @@ module StripeMock
           invoices[in_id] = invoice
 
           pi_id = new_id('pi')
+          intent_status = sub[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
+          pi = Data.mock_payment_intent(
+            id: pi_id, status: intent_status,
+            amount: amount, currency: (plan_or_price[:currency] rescue nil),
+            customer: cus[:id]
+          )
+          payment_intents[pi_id] = pi
+
           charges[id] = Data.mock_charge(
             :id => id,
             :customer => cus[:id],
@@ -112,10 +120,10 @@ module StripeMock
             :description => sub[:description]
           )
 
-          # Set latest_invoice - keep expanded hash if already set via expand param
-          unless sub[:latest_invoice].is_a?(Hash)
-            sub[:latest_invoice] = in_id
-          end
+          invoice[:payment_intent] = pi_id
+          invoices[in_id] = invoice
+
+          sub[:latest_invoice] = in_id
         end
 
         item_data = sub[:items][:data][0]
