@@ -191,6 +191,12 @@ module StripeMock
         subscriptions[subscription[:id]] = subscription
         add_subscription_to_customer(customer, subscription)
 
+        if params[:expand]&.include?('customer')
+          result = subscription.clone
+          result[:customer] = customer.reject { |k, _| k == :subscriptions }
+          return result
+        end
+
         subscriptions[subscription[:id]]
       end
 

@@ -1350,6 +1350,17 @@ shared_examples 'Customer Subscriptions with plans' do
     Stripe::Subscription.create options
   end
 
+  it "expands customer on create" do
+    customer = Stripe::Customer.create(source: gen_card_tk, email: 'create@test.com')
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['customer']
+    )
+    expect(sub.customer).to respond_to(:email)
+    expect(sub.customer.email).to eq('create@test.com')
+  end
+
   it "doesn't require a card when collection_method is send_invoice" do
     stripe_customer = Stripe::Customer.create
     sub = Stripe::Subscription.create(
