@@ -109,6 +109,10 @@ module StripeMock
                              'paid'
                            end
 
+          due_date = if is_send_invoice && sub[:days_until_due]
+                       Time.now.utc.to_i + (sub[:days_until_due] * 86400)
+                     end
+
           invoice = Data.mock_invoice([invoice_line],
             id: in_id,
             customer: cus[:id],
@@ -116,6 +120,7 @@ module StripeMock
             subscription: sub[:id],
             status: invoice_status,
             paid: (!is_incomplete && !is_send_invoice),
+            due_date: due_date,
             metadata: sub[:metadata] || {}
           )
 
