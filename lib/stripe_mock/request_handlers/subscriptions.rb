@@ -326,6 +326,12 @@ module StripeMock
         customer[:subscriptions][:data].reject! { |sub| sub[:id] == subscription[:id] }
         customer[:subscriptions][:data] << subscription
 
+        if params[:expand]
+          subscription = subscription.clone
+          generate_subscription_invoice_if_needed(subscription, params[:expand])
+          expand_subscription_fields(subscription, params[:expand], stripe_account)
+        end
+
         subscription
       end
 
@@ -420,6 +426,38 @@ module StripeMock
         return if params[:billing] == 'send_invoice'
 
         raise Stripe::InvalidRequestError.new('This customer has no attached payment source', nil, http_status: 400)
+      end
+
+      def generate_subscription_invoice_if_needed(subscription, expand_list)
+        needs_invoice = expand_list.any? { |s| s.start_with?('latest_invoice') }
+        return unless needs_invoice
+
+        invoice_value = subscription[:latest_invoice]
+        return if invoice_value.is_a?(Hash) && invoice_value[:payment_intent].is_a?(Hash)
+
+        plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
+        return unless plan_or_price
+
+        intent_status = subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
+        intent = Data.mock_payment_intent({
+          id: new_id('pi'),
+          status: intent_status,
+          amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
+          currency: plan_or_price[:currency]
+        })
+        payment_intents[intent[:id]] = intent
+
+        expand_pi = expand_list.any? { |s| s.include?('latest_invoice.payment_intent') }
+        pi_value = expand_pi ? intent : intent[:id]
+
+        invoice = Data.mock_invoice([], {
+          id: new_id('in'),
+          payment_intent: pi_value,
+          subscription: subscription[:id],
+          customer: subscription[:customer]
+        })
+        invoices[invoice[:id]] = invoice
+        subscription[:latest_invoice] = invoice
       end
 
       def expand_subscription_fields(subscription, expand_list, stripe_account)

@@ -1350,6 +1350,21 @@ shared_examples 'Customer Subscriptions with plans' do
     Stripe::Subscription.create options
   end
 
+  context 'updating a subscription with expand' do
+    it 'expands latest_invoice.payment_intent on update' do
+      customer = Stripe::Customer.create(source: gen_card_tk)
+      sub = Stripe::Subscription.create(customer: customer.id, items: [{ plan: plan.id }])
+
+      updated = Stripe::Subscription.update(sub.id, {
+        metadata: { foo: 'bar' },
+        expand: ['latest_invoice.payment_intent']
+      })
+
+      expect(updated.latest_invoice).to respond_to(:status)
+      expect(updated.latest_invoice.payment_intent).to respond_to(:status)
+    end
+  end
+
   context 'retrieving a single subscription' do
     let(:customer) { Stripe::Customer.create(id: 'test_customer_sub', source: gen_card_tk, plan: 'free') }
     let(:subscription) { Stripe::Subscription.retrieve(customer.subscriptions.data.first.id) }
