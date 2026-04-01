@@ -112,7 +112,7 @@ module StripeMock
                        Time.now.utc.to_i + (sub[:days_until_due] * 86400)
                      end
 
-          invoice = Data.mock_invoice([invoice_line],
+          invoice_params = {
             id: in_id,
             customer: cus[:id],
             customer_name: cus[:name],
@@ -121,7 +121,12 @@ module StripeMock
             paid: (!is_incomplete && !is_send_invoice),
             due_date: due_date,
             metadata: sub[:metadata] || {}
-          )
+          }
+          if invoice_status == 'paid'
+            invoice_params[:hosted_invoice_url] = "https://invoice.stripe.com/i/acct_test/test/#{in_id}"
+            invoice_params[:invoice_pdf] = "https://pay.stripe.com/invoice/acct_test/test/#{in_id}/pdf"
+          end
+          invoice = Data.mock_invoice([invoice_line], invoice_params)
 
           pi_id = nil
           unless is_send_invoice
