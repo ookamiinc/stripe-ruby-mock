@@ -1426,6 +1426,18 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.customer.email).to eq('create@test.com')
   end
 
+  it "preserves payment_settings on create" do
+    customer = Stripe::Customer.create
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      collection_method: 'send_invoice',
+      days_until_due: 7,
+      payment_settings: { payment_method_types: ['konbini'] }
+    )
+    expect(sub.payment_settings.payment_method_types).to eq(['konbini'])
+  end
+
   it "doesn't require a card when collection_method is send_invoice" do
     stripe_customer = Stripe::Customer.create
     sub = Stripe::Subscription.create(
