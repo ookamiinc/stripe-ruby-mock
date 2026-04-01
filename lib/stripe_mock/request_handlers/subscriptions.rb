@@ -519,14 +519,20 @@ module StripeMock
                            'paid'
                          end
 
-        invoice = Data.mock_invoice([], {
-          id: new_id('in'),
+        in_id = new_id('in')
+        invoice_params = {
+          id: in_id,
           payment_intent: pi_value,
           subscription: subscription[:id],
           customer: subscription[:customer],
           status: invoice_status,
           paid: (!is_incomplete && !is_send_invoice)
-        })
+        }
+        if %w[paid open].include?(invoice_status)
+          invoice_params[:hosted_invoice_url] = "https://invoice.stripe.com/i/acct_test/test/#{in_id}"
+          invoice_params[:invoice_pdf] = "https://pay.stripe.com/invoice/acct_test/test/#{in_id}/pdf"
+        end
+        invoice = Data.mock_invoice([], invoice_params)
         invoices[invoice[:id]] = invoice
         subscription[:latest_invoice] = invoice
       end

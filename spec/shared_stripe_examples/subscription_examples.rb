@@ -1485,6 +1485,25 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(updated.latest_invoice.payment_intent.status).to eq('requires_payment_method')
   end
 
+  it "sets hosted_invoice_url on open invoice from subscription update" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+
+    new_plan = stripe_helper.create_plan(id: 'decline_plan', product: product.id)
+    StripeMock.prepare_card_error(:card_declined, :subscription_update)
+    updated = Stripe::Subscription.update(sub.id, {
+      items: [{ id: sub.items.data.first.id, deleted: true }, { plan: new_plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    })
+    expect(updated.latest_invoice.status).to eq('open')
+    expect(updated.latest_invoice.hosted_invoice_url).to be_a(String)
+    expect(updated.latest_invoice.hosted_invoice_url).to include('https://invoice.stripe.com')
+  end
+
   it "updates subscription to incomplete with requires_action for 3DS" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     sub = Stripe::Subscription.create(
