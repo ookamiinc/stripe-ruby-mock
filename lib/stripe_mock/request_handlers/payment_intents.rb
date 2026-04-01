@@ -96,7 +96,11 @@ module StripeMock
           payment_intent[:payment_method] = params[:payment_method]
         end
 
-        succeeded_payment_intent(payment_intent)
+        if async_payment_method?(payment_intent)
+          async_confirm_payment_intent(payment_intent)
+        else
+          succeeded_payment_intent(payment_intent)
+        end
       end
 
       def cancel_payment_intent(route, method_url, params, headers)
@@ -178,6 +182,47 @@ module StripeMock
           },
           type: "invalid_request_error"
         }
+      end
+
+      ASYNC_PAYMENT_TYPES = %w[konbini].freeze
+
+      def async_payment_method?(payment_intent)
+        pm_id = payment_intent[:payment_method]
+        return false unless pm_id.is_a?(String)
+
+        pm = payment_methods[pm_id]
+        return false unless pm
+
+        ASYNC_PAYMENT_TYPES.include?(pm[:type].to_s)
+      end
+
+      def async_confirm_payment_intent(payment_intent)
+        pm = payment_methods[payment_intent[:payment_method]]
+        pm_type = pm[:type].to_s
+
+        payment_intent[:status] = 'requires_action'
+        payment_intent[:next_action] = build_next_action(pm_type)
+        payment_intent
+      end
+
+      def build_next_action(pm_type)
+        case pm_type
+        when 'konbini'
+          expires_at = Time.now.utc.to_i + (3 * 86400)
+          {
+            type: 'konbini_display_details',
+            konbini_display_details: {
+              expires_at: expires_at,
+              hosted_voucher_url: "https://payments.stripe.com/konbini/voucher/test_mock",
+              stores: {
+                familymart: { confirmation_number: '00000000000', payment_code: '000000' },
+                lawson: { confirmation_number: '00000000000', payment_code: '000000' },
+                ministop: { confirmation_number: '00000000000', payment_code: '000000' },
+                seicomart: { confirmation_number: '00000000000', payment_code: '000000' }
+              }
+            }
+          }
+        end
       end
 
       def succeeded_payment_intent(payment_intent)

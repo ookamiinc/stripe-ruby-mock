@@ -144,6 +144,19 @@ shared_examples 'PaymentIntent API' do
     expect(charge.payment_method).to eq("test_pm_1")
   end
 
+  context "confirming with konbini payment method" do
+    it "returns requires_action with konbini_display_details" do
+      pm = Stripe::PaymentMethod.create(type: 'konbini', billing_details: { email: 'test@example.com', name: 'Test' })
+      pi = Stripe::PaymentIntent.create(amount: 1000, currency: 'jpy', payment_method_types: ['konbini'])
+      confirmed = Stripe::PaymentIntent.confirm(pi.id, payment_method: pm.id)
+
+      expect(confirmed.status).to eq('requires_action')
+      expect(confirmed.next_action.type).to eq('konbini_display_details')
+      expect(confirmed.next_action.konbini_display_details.hosted_voucher_url).to be_a(String)
+      expect(confirmed.next_action.konbini_display_details.expires_at).to be_a(Integer)
+    end
+  end
+
   it "confirms a stripe payment_intent" do
     payment_intent = Stripe::PaymentIntent.create(amount: 100, currency: "usd")
     confirmed_payment_intent = payment_intent.confirm()
