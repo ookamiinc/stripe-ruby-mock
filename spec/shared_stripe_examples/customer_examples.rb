@@ -405,6 +405,16 @@ shared_examples 'Customer API' do
     end
   end
 
+  context "deleting a customer" do
+    it "returns deleted: true when retrieving a deleted customer" do
+      customer = Stripe::Customer.create(email: 'del@test.com')
+      Stripe::Customer.delete(customer.id)
+      retrieved = Stripe::Customer.retrieve(customer.id)
+      expect(retrieved.id).to eq(customer.id)
+      expect(retrieved.deleted).to eq(true)
+    end
+  end
+
   context "search" do
     # the Search API requires about a minute between writes and reads, so add sleeps accordingly when running live
     it "searches customers for exact matches", :aggregate_failures do
