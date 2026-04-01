@@ -33,7 +33,8 @@ module StripeMock
       # get /v1/payment_methods/:id
       def get_payment_method(route, method_url, params, headers)
         id = method_url.match(route)[1] || params[:payment_method]
-        payment_method = assert_existence :payment_method, id, payment_methods[id]
+        payment_method = assert_existence :payment_method, id, payment_methods[id],
+          "No such PaymentMethod: '#{id}'; It's possible this PaymentMethod exists on one of your connected accounts, in which case you should retry this request on that connected account. Learn more at https://stripe.com/docs/connect/authentication"
 
         payment_method.clone
       end
@@ -61,7 +62,8 @@ module StripeMock
 
         assert_existence :customer, params[:customer], customers[stripe_account][params[:customer]]
 
-        payment_method = assert_existence :payment_method, id, payment_methods[id]
+        payment_method = assert_existence :payment_method, id, payment_methods[id],
+          pm_not_found_message(id)
         payment_methods[id] = Util.rmerge(payment_method, params.select { |k, _v| allowed_params.include?(k) })
         payment_methods[id].clone
       end
@@ -70,7 +72,8 @@ module StripeMock
       def detach_payment_method(route, method_url, params, headers)
         id = method_url.match(route)[1]
 
-        payment_method = assert_existence :payment_method, id, payment_methods[id]
+        payment_method = assert_existence :payment_method, id, payment_methods[id],
+          pm_not_found_message(id)
         payment_method[:customer] = nil
 
         payment_method.clone
@@ -114,6 +117,10 @@ module StripeMock
             http_status: 400
           )
         end
+      end
+
+      def pm_not_found_message(id)
+        "No such PaymentMethod: '#{id}'; It's possible this PaymentMethod exists on one of your connected accounts, in which case you should retry this request on that connected account. Learn more at https://stripe.com/docs/connect/authentication"
       end
 
       def valid_types
