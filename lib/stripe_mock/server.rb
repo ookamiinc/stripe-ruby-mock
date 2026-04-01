@@ -83,6 +83,10 @@ module StripeMock
       @instance.error_queue
     end
 
+    def set_pending_payment_action(status)
+      @instance.set_pending_payment_action(status)
+    end
+
     def debug?
       @instance.debug
     end

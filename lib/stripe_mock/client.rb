@@ -38,6 +38,10 @@ module StripeMock
       timeout_wrap { @pipe.error_queue }
     end
 
+    def set_pending_payment_action(status)
+      timeout_wrap { @pipe.set_pending_payment_action(status) }
+    end
+
     def set_server_debug(toggle)
       timeout_wrap { @pipe.set_debug(toggle) }
     end

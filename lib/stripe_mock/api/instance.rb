@@ -44,9 +44,13 @@ module StripeMock
   #   StripeMock.prepare_payment_action(:requires_action)
   #   StripeMock.prepare_payment_action(:requires_payment_method)
   def self.prepare_payment_action(status)
-    raise UnstartedStateError unless @instance
-
-    @instance.pending_payment_action = status.to_s
+    if @state == 'local'
+      instance
+    elsif @state == 'remote'
+      client
+    else
+      raise UnstartedStateError
+    end.set_pending_payment_action(status.to_s)
   end
 
 end

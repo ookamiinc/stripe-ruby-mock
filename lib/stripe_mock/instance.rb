@@ -112,6 +112,10 @@ module StripeMock
       @base_strategy = TestStrategies::Base.new
     end
 
+    def set_pending_payment_action(status)
+      @pending_payment_action = status
+    end
+
     def mock_request(*args, **kwargs)
       if args.length == 2 && kwargs.key?(:api_key) # Legacy signature
         method, url = args
