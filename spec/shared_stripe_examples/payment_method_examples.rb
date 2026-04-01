@@ -344,6 +344,31 @@ shared_examples 'PaymentMethod API' do
     end
   end
 
+  # post /v1/payment_methods/:id (update)
+  describe 'Update a PaymentMethod', live: true do
+    let(:customer) { Stripe::Customer.create }
+
+    context 'with valid expiration' do
+      it 'updates card expiration' do
+        pm = Stripe::PaymentMethod.create(type: 'card', card: card_details)
+        Stripe::PaymentMethod.attach(pm.id, customer: customer.id)
+        updated = Stripe::PaymentMethod.update(pm.id, card: { exp_month: 6, exp_year: 2031 })
+        expect(updated.card.exp_month).to eq(6)
+        expect(updated.card.exp_year).to eq(2031)
+      end
+    end
+
+    context 'with invalid expiration year' do
+      it 'raises invalid_expiry_year error' do
+        pm = Stripe::PaymentMethod.create(type: 'card', card: card_details)
+        Stripe::PaymentMethod.attach(pm.id, customer: customer.id)
+        expect {
+          Stripe::PaymentMethod.update(pm.id, card: { exp_month: 6, exp_year: 19 })
+        }.to raise_error(Stripe::InvalidRequestError, /expiration year is invalid/)
+      end
+    end
+  end
+
   # post /v1/payment_methods/:id/detach
   describe 'Detach a PaymentMethod from a Customer', live: true do
     let(:customer) { Stripe::Customer.create }

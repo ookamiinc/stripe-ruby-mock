@@ -99,6 +99,8 @@ module StripeMock
           )
         end
 
+        validate_card_expiration(params[:card]) if params[:card]
+
         payment_methods[id] =
           Util.rmerge(payment_method, params.select { |k, _v| allowed_params.include?(k)} )
 
@@ -121,6 +123,15 @@ module StripeMock
 
       def pm_not_found_message(id)
         "No such PaymentMethod: '#{id}'; It's possible this PaymentMethod exists on one of your connected accounts, in which case you should retry this request on that connected account. Learn more at https://stripe.com/docs/connect/authentication"
+      end
+
+      def validate_card_expiration(card)
+        if card[:exp_year] && card[:exp_year].to_i < 100
+          raise Stripe::InvalidRequestError.new(
+            "Your card's expiration year is invalid.",
+            'exp_year', http_status: 400
+          )
+        end
       end
 
       def valid_types
