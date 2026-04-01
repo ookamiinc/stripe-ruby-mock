@@ -157,6 +157,16 @@ module StripeMock
         Data.mock_list_object(results, params)
       end
 
+      def delete_customer_discount(route, method_url, params, headers)
+        stripe_account = headers && headers[:stripe_account] || Stripe.api_key
+        route =~ method_url
+        cus = assert_existence :customer, $1, customers[stripe_account][$1]
+
+        cus[:discount] = nil
+
+        cus
+      end
+
       private
 
       def validate_customer_email(email)
@@ -166,18 +176,6 @@ module StripeMock
         raise Stripe::InvalidRequestError.new(
           "Invalid email address: #{email}", 'email', http_status: 400
         )
-      end
-
-      public
-
-      def delete_customer_discount(route, method_url, params, headers)
-        stripe_account = headers && headers[:stripe_account] || Stripe.api_key
-        route =~ method_url
-        cus = assert_existence :customer, $1, customers[stripe_account][$1]
-
-        cus[:discount] = nil
-
-        cus
       end
     end
   end
