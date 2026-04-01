@@ -80,7 +80,7 @@ module StripeMock
         if params[:subscriptions] && !params[:subscriptions][:data].nil?
           params.delete(:subscriptions) unless params[:subscriptions][:data].any?{ |v| !!v[:type]}
         end
-        cus.merge!(params)
+        cus.merge!(params.compact)
         cus[:metadata] = {**metadata, **metadata_updates}
 
         if params[:source]

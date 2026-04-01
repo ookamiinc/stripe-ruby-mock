@@ -354,6 +354,16 @@ shared_examples 'Customer API' do
     expect(all.data.map &:email).to include('one@one.com', 'two@two.com')
   end
 
+  context "updating a customer" do
+    it "ignores nil values in update" do
+      customer = Stripe::Customer.create(email: 'test@example.com', phone: '1234567890')
+      Stripe::Customer.update(customer.id, phone: nil, name: 'New Name')
+      updated = Stripe::Customer.retrieve(customer.id)
+      expect(updated.phone).to eq('1234567890')
+      expect(updated.name).to eq('New Name')
+    end
+  end
+
   context "email validation" do
     it "rejects invalid email on create" do
       expect {
