@@ -171,6 +171,7 @@ module StripeMock
 
       def validate_customer_email(email)
         return if email.nil?
+        return if email.empty?
         return if email.match?(/\A[^@\s]+@[^@\s]+\z/)
 
         raise Stripe::InvalidRequestError.new(
