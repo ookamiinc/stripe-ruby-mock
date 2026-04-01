@@ -7,6 +7,14 @@ shared_examples 'PaymentIntent API' do
     Stripe::Customer.create(email: 'alice@bob.com', source: token.id)
   end
 
+  it "returns requires_action when prepare_payment_action is set" do
+    StripeMock.prepare_payment_action(:requires_action)
+    pi = Stripe::PaymentIntent.create(amount: 500, currency: "usd", confirm: true)
+    expect(pi.status).to eq('requires_action')
+    expect(pi.next_action.type).to eq('use_stripe_sdk')
+    expect(pi.amount_received).to eq(0)
+  end
+
   it "accepts string amount and coerces to integer" do
     pi = Stripe::PaymentIntent.create(amount: "500", currency: "usd")
     expect(pi.amount).to eq(500)
