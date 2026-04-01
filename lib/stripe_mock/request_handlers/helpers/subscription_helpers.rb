@@ -39,6 +39,7 @@ module StripeMock
         params.merge!({ :plan => (plans.size == 1 ? plans.first : nil) })
         keys_to_merge = /application_fee_percent|quantity|metadata|tax_percent|billing|days_until_due|default_tax_rates|pending_invoice_item_interval|default_payment_method|collection_method|payment_settings/
         merged = options.select {|k,v| k =~ keys_to_merge && !v.nil?}
+        merged.delete(:default_payment_method) if merged[:default_payment_method].to_s.empty?
         if merged[:metadata]
           merged[:metadata] = merged[:metadata]
             .reject { |_, v| v.nil? || v.to_s.empty? }
