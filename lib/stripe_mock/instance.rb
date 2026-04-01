@@ -207,9 +207,19 @@ module StripeMock
 
     private
 
+    STRIPE_TYPE_NAMES = {
+      payment_method: 'PaymentMethod',
+      payment_intent: 'PaymentIntent',
+      setup_intent: 'SetupIntent',
+      checkout_session: 'checkout.session',
+      balance_transaction: 'BalanceTransaction',
+      subscription_item: 'SubscriptionItem'
+    }.freeze
+
     def assert_existence(type, id, obj, message=nil)
       if obj.nil?
-        msg = message || "No such #{type}: '#{id}'"
+        type_name = STRIPE_TYPE_NAMES[type.to_sym] || type
+        msg = message || "No such #{type_name}: '#{id}'"
         raise Stripe::InvalidRequestError.new(msg, type.to_s, http_status: 404)
       end
       obj

@@ -49,7 +49,7 @@ shared_examples 'Subscription Items API' do
       expect { Stripe::SubscriptionItem.update('some_id') }.to raise_error { |e|
         expect(e).to be_a(Stripe::InvalidRequestError)
         expect(e.param).to eq('subscription_item')
-        expect(e.message).to eq("No such subscription_item: 'some_id'")
+        expect(e.message).to eq("No such SubscriptionItem: 'some_id'")
       }
     end
   end
