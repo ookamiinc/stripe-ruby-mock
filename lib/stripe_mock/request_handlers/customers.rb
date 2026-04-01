@@ -129,9 +129,17 @@ module StripeMock
         customer = assert_existence :customer, $1, customers[stripe_account][$1]
 
         customer = customer.clone
-        if params[:expand] == ['default_source'] && customer[:sources][:data]
+        expand = params[:expand] || []
+        if expand.include?('default_source') && customer[:sources][:data]
           customer[:default_source] = customer[:sources][:data].detect do |source|
             source[:id] == customer[:default_source]
+          end
+        end
+        if expand.include?('invoice_settings.default_payment_method')
+          pm_id = customer.dig(:invoice_settings, :default_payment_method)
+          if pm_id.is_a?(String) && payment_methods[pm_id]
+            customer[:invoice_settings] = (customer[:invoice_settings] || {}).clone
+            customer[:invoice_settings][:default_payment_method] = payment_methods[pm_id]
           end
         end
 

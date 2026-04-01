@@ -337,6 +337,20 @@ shared_examples 'Customer API' do
     expect(customer.default_source).to be_a(Stripe::Card)
   end
 
+  it "can expand invoice_settings.default_payment_method" do
+    pm = Stripe::PaymentMethod.create(type: 'card', card: { number: '4242424242424242', exp_month: 12, exp_year: 2030, cvc: '123' })
+    original = Stripe::Customer.create(email: 'test@test.com')
+    Stripe::PaymentMethod.attach(pm.id, customer: original.id)
+    Stripe::Customer.update(original.id, invoice_settings: { default_payment_method: pm.id })
+    customer = Stripe::Customer.retrieve(
+      id: original.id,
+      expand: ['invoice_settings.default_payment_method']
+    )
+    expect(customer.invoice_settings.default_payment_method).to be_a(Stripe::StripeObject)
+    expect(customer.invoice_settings.default_payment_method.id).to eq(pm.id)
+    expect(customer.invoice_settings.default_payment_method.card.brand).to eq('visa')
+  end
+
   it "cannot retrieve a customer that doesn't exist" do
     expect { Stripe::Customer.retrieve('nope') }.to raise_error {|e|
       expect(e).to be_a Stripe::InvalidRequestError
