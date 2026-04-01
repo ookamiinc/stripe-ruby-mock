@@ -30,7 +30,7 @@ module StripeMock
       when :invalid_expiry_month then build_card_error("The card's expiration month is invalid", 'exp_month', code: 'invalid_expiry_month', http_status: 402)
       when :invalid_expiry_year then build_card_error("The card's expiration year is invalid", 'exp_year', code: 'invalid_expiry_year', http_status: 402)
       when :invalid_cvc then build_card_error("The card's security code is invalid", 'cvc', code: 'invalid_cvc', http_status: 402)
-      when :expired_card then build_card_error('The card has expired', 'exp_month', code: 'expired_card', http_status: 402)
+      when :expired_card then build_card_error('Your card has expired.', 'exp_month', code: 'expired_card', http_status: 402)
       when :incorrect_cvc then build_card_error("The card's security code is incorrect", 'cvc', code: 'incorrect_cvc', http_status: 402)
       when :card_declined then build_card_error('The card was declined', nil, code: 'card_declined', http_status: 402)
       when :missing then build_card_error('There is no card on a customer that is being charged.', nil, code: 'missing', http_status: 402)
