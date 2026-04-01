@@ -22,6 +22,7 @@ shared_examples 'Customer API' do
     expect(customer.balance).to eq(0)
     expect(customer.phone).to be_nil
     expect(customer.tax_exempt).to eq('none')
+    expect(customer.shipping).to be_nil
 
     expect(customer.sources.count).to eq(1)
     expect(customer.sources.data.length).to eq(1)

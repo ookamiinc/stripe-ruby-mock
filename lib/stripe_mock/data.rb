@@ -197,6 +197,7 @@ module StripeMock
           footer: nil,
           rendering_options: nil
         },
+        shipping: nil,
         sources: {
           object: "list",
           total_count: sources.size,
