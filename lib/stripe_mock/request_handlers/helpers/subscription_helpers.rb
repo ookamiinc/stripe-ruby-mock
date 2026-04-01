@@ -122,7 +122,7 @@ module StripeMock
             due_date: due_date,
             metadata: sub[:metadata] || {}
           }
-          if invoice_status == 'paid'
+          if %w[paid open].include?(invoice_status)
             invoice_params[:hosted_invoice_url] = "https://invoice.stripe.com/i/acct_test/test/#{in_id}"
             invoice_params[:invoice_pdf] = "https://pay.stripe.com/invoice/acct_test/test/#{in_id}/pdf"
           end
