@@ -83,10 +83,12 @@ module StripeMock
         unless invoice[:payment_intent]
           amount = invoice[:amount_due] || invoice[:total] || 0
           pi_id = new_id('pi')
+          pm_id = new_id('pm')
+          payment_methods[pm_id] = Data.mock_payment_method(id: pm_id, type: 'card', customer: invoice[:customer])
           pi = Data.mock_payment_intent(
             id: pi_id, status: 'requires_payment_method',
             amount: amount, currency: invoice[:currency],
-            customer: invoice[:customer]
+            customer: invoice[:customer], payment_method: pm_id
           )
           payment_intents[pi_id] = pi
           invoice[:payment_intent] = pi_id
@@ -105,7 +107,14 @@ module StripeMock
             when /^payment_intent/
               pi_id = result[:payment_intent]
               if pi_id.is_a?(String) && payment_intents[pi_id]
-                result[:payment_intent] = payment_intents[pi_id].clone
+                pi = payment_intents[pi_id].clone
+                if field.include?('payment_method')
+                  pm_id = pi[:payment_method]
+                  if pm_id.is_a?(String) && payment_methods[pm_id]
+                    pi[:payment_method] = payment_methods[pm_id].clone
+                  end
+                end
+                result[:payment_intent] = pi
               end
             end
           end
