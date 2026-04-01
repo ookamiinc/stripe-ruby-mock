@@ -62,6 +62,15 @@ shared_examples 'PaymentMethod API' do
         expect(payment_method.id).to match(/^test_pm/)
       end
 
+      it 'includes created timestamp' do
+        expect(payment_method.created).to be_a(Integer)
+        expect(payment_method.created).to be > 0
+      end
+
+      it 'includes livemode field' do
+        expect(payment_method.livemode).to eq(false)
+      end
+
       it 'creates a payment method with a billing address' do
         expect(payment_method.billing_details.address.city).to eq('North New Portland')
         expect(payment_method.billing_details.address.country).to eq('US')

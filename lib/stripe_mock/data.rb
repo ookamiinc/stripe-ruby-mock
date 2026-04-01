@@ -1476,6 +1476,8 @@ module StripeMock
       {
         id: payment_method_id,
         object: 'payment_method',
+        created: Time.now.to_i,
+        livemode: false,
         type: params[:type],
         billing_details: {
           address: {
