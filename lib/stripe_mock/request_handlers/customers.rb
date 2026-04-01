@@ -138,7 +138,11 @@ module StripeMock
 
       def list_customers(route, method_url, params, headers)
         stripe_account = headers && headers[:stripe_account] || Stripe.api_key
-        Data.mock_list_object(customers[stripe_account]&.values, params)
+        result = customers[stripe_account]&.values || []
+        if params[:email]
+          result = result.select { |c| c[:email] == params[:email] }
+        end
+        Data.mock_list_object(result, params)
       end
 
       SEARCH_FIELDS = ["email", "name", "phone"].freeze

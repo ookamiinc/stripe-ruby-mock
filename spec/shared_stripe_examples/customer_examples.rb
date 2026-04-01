@@ -354,6 +354,26 @@ shared_examples 'Customer API' do
     expect(all.data.map &:email).to include('one@one.com', 'two@two.com')
   end
 
+  context "listing customers" do
+    it "filters by email" do
+      Stripe::Customer.create(email: 'alice@test.com')
+      Stripe::Customer.create(email: 'bob@test.com')
+      Stripe::Customer.create(email: 'alice@test.com')
+
+      result = Stripe::Customer.list(email: 'alice@test.com')
+      expect(result.data.length).to eq(2)
+      expect(result.data.map(&:email)).to all(eq('alice@test.com'))
+    end
+
+    it "returns all customers when no email filter" do
+      Stripe::Customer.create(email: 'a@test.com')
+      Stripe::Customer.create(email: 'b@test.com')
+
+      result = Stripe::Customer.list
+      expect(result.data.length).to eq(2)
+    end
+  end
+
   context "search" do
     # the Search API requires about a minute between writes and reads, so add sleeps accordingly when running live
     it "searches customers for exact matches", :aggregate_failures do
