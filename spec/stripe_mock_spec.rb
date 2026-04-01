@@ -62,6 +62,21 @@ describe StripeMock do
     StripeMock.stop
   end
 
+  it "raises ArgumentError for invalid prepare_payment_action status" do
+    StripeMock.start
+    expect {
+      StripeMock.prepare_payment_action(:invalid_status)
+    }.to raise_error(ArgumentError, /Invalid payment action status/)
+    StripeMock.stop
+  end
+
+  it "accepts valid prepare_payment_action statuses" do
+    StripeMock.start
+    expect { StripeMock.prepare_payment_action(:requires_action) }.not_to raise_error
+    expect { StripeMock.prepare_payment_action(:requires_payment_method) }.not_to raise_error
+    StripeMock.stop
+  end
+
   it "throws an error when trying to prepare an error before starting" do
     expect { StripeMock.prepare_error(StandardError.new) }.to raise_error {|e|
       expect(e).to be_a(StripeMock::UnstartedStateError)

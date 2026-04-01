@@ -37,6 +37,8 @@ module StripeMock
   def self.instance; @instance; end
   def self.state; @state; end
 
+  VALID_PAYMENT_ACTION_STATUSES = %w[requires_action requires_payment_method].freeze
+
   # Prepare a payment action status for the next subscription operation.
   # This simulates 3D Secure or other authentication requirements.
   #
@@ -44,13 +46,18 @@ module StripeMock
   #   StripeMock.prepare_payment_action(:requires_action)
   #   StripeMock.prepare_payment_action(:requires_payment_method)
   def self.prepare_payment_action(status)
+    status_str = status.to_s
+    unless VALID_PAYMENT_ACTION_STATUSES.include?(status_str)
+      raise ArgumentError, "Invalid payment action status: #{status_str}. Must be one of: #{VALID_PAYMENT_ACTION_STATUSES.join(', ')}"
+    end
+
     if @state == 'local'
       instance
     elsif @state == 'remote'
       client
     else
       raise UnstartedStateError
-    end.set_pending_payment_action(status.to_s)
+    end.set_pending_payment_action(status_str)
   end
 
 end
