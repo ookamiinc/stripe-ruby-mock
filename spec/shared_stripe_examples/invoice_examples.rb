@@ -231,6 +231,48 @@ shared_examples 'Invoice API' do
     end
   end
 
+  context "sending an invoice" do
+    before do
+      @invoice = Stripe::Invoice.create
+    end
+
+    it 'updates status to open' do
+      sent_invoice = Stripe::Invoice.send_invoice(@invoice.id)
+      expect(sent_invoice.status).to eq('open')
+    end
+
+    it 'sets hosted_invoice_url' do
+      sent_invoice = Stripe::Invoice.send_invoice(@invoice.id)
+      expect(sent_invoice.hosted_invoice_url).to be_a(String)
+      expect(sent_invoice.hosted_invoice_url).to include('https://invoice.stripe.com')
+    end
+
+    it 'sets invoice_pdf' do
+      sent_invoice = Stripe::Invoice.send_invoice(@invoice.id)
+      expect(sent_invoice.invoice_pdf).to be_a(String)
+      expect(sent_invoice.invoice_pdf).to include('https://pay.stripe.com')
+    end
+
+    it 'raises error for non-existent invoice' do
+      expect { Stripe::Invoice.send_invoice('in_nonexistent') }.to raise_error(Stripe::InvalidRequestError)
+    end
+  end
+
+  context "voiding an invoice" do
+    before do
+      @invoice = Stripe::Invoice.create
+    end
+
+    it 'updates status to void' do
+      voided_invoice = Stripe::Invoice.void_invoice(@invoice.id)
+      expect(voided_invoice.status).to eq('void')
+    end
+
+    it 'raises error for non-existent invoice' do
+      expect { Stripe::Invoice.void_invoice('in_nonexistent') }.to raise_error(Stripe::InvalidRequestError)
+    end
+  end
+
   context "retrieving upcoming invoice" do
     let(:customer)      { Stripe::Customer.create(source: stripe_helper.generate_card_token) }
     let(:coupon_amtoff) { stripe_helper.create_coupon(id: '100OFF', currency: 'usd', amount_off: 100_00, duration: 'repeating', duration_in_months: 6) }

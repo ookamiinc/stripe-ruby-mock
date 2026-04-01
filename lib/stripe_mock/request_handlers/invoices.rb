@@ -11,6 +11,8 @@ module StripeMock
         klass.add_handler 'get /v1/invoices/search',         :search_invoices
         klass.add_handler 'get /v1/invoices',                :list_invoices
         klass.add_handler 'post /v1/invoices/(.*)/pay',      :pay_invoice
+        klass.add_handler 'post /v1/invoices/(.*)/send',    :send_invoice
+        klass.add_handler 'post /v1/invoices/(.*)/void',    :void_invoice
         klass.add_handler 'post /v1/invoices/(.*)',          :update_invoice
       end
 
@@ -70,6 +72,24 @@ module StripeMock
           :charge => charge[:id],
           :hosted_invoice_url => "https://invoice.stripe.com/i/acct_test/test/#{$1}",
           :invoice_pdf => "https://pay.stripe.com/invoice/acct_test/test/#{$1}/pdf",
+        )
+      end
+
+      def send_invoice(route, method_url, params, headers)
+        route =~ method_url
+        assert_existence :invoice, $1, invoices[$1]
+        invoices[$1].merge!(
+          :status => "open",
+          :hosted_invoice_url => "https://invoice.stripe.com/i/acct_test/test/#{$1}",
+          :invoice_pdf => "https://pay.stripe.com/invoice/acct_test/test/#{$1}/pdf",
+        )
+      end
+
+      def void_invoice(route, method_url, params, headers)
+        route =~ method_url
+        assert_existence :invoice, $1, invoices[$1]
+        invoices[$1].merge!(
+          :status => "void",
         )
       end
 
