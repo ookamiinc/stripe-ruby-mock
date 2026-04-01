@@ -126,11 +126,13 @@ module StripeMock
           pi_id = nil
           unless is_send_invoice
             pi_id = new_id('pi')
+            pm_id = new_id('pm')
+            payment_methods[pm_id] = Data.mock_payment_method(id: pm_id, type: 'card', customer: cus[:id])
             intent_status = is_incomplete ? 'requires_payment_method' : 'succeeded'
             pi = Data.mock_payment_intent(
               id: pi_id, status: intent_status,
               amount: amount, currency: (plan_or_price[:currency] rescue nil),
-              customer: cus[:id]
+              customer: cus[:id], payment_method: pm_id
             )
             payment_intents[pi_id] = pi
 

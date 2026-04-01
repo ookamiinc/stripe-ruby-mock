@@ -1437,6 +1437,17 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.collection_method).to eq('send_invoice')
   end
 
+  it "expands latest_invoice.payment_intent.payment_method on create" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent.payment_method']
+    )
+    expect(sub.latest_invoice.payment_intent).to respond_to(:status)
+    expect(sub.latest_invoice.payment_intent.payment_method).to respond_to(:type)
+  end
+
   context 'updating a subscription with expand' do
     it 'expands latest_invoice.payment_intent on update' do
       customer = Stripe::Customer.create(source: gen_card_tk)

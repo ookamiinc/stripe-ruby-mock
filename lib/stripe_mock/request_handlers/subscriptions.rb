@@ -541,6 +541,7 @@ module StripeMock
               subscription[:latest_invoice] = invoice.clone if invoice
             end
           when /^latest_invoice\.payment_intent/
+            expand_pm = field.include?('payment_method')
             invoice_id = subscription[:latest_invoice]
             if invoice_id.is_a?(String)
               invoice = invoices[invoice_id]
@@ -548,16 +549,18 @@ module StripeMock
                 invoice = invoice.clone
                 pi_id = invoice[:payment_intent]
                 if pi_id.is_a?(String)
-                  pi = payment_intents[pi_id]
-                  invoice[:payment_intent] = pi.clone if pi
+                  pi = payment_intents[pi_id].clone
+                  expand_payment_method(pi) if expand_pm
+                  invoice[:payment_intent] = pi
                 end
                 subscription[:latest_invoice] = invoice
               end
             elsif invoice_id.is_a?(Hash)
               pi_id = invoice_id[:payment_intent]
               if pi_id.is_a?(String)
-                pi = payment_intents[pi_id]
-                invoice_id[:payment_intent] = pi.clone if pi
+                pi = payment_intents[pi_id].clone
+                expand_payment_method(pi) if expand_pm
+                invoice_id[:payment_intent] = pi
               end
             end
           when 'customer.default_source'
@@ -589,6 +592,13 @@ module StripeMock
             customer = customers[stripe_account][customer_id] if customer_id
             subscription[:customer] = customer if customer
           end
+        end
+      end
+
+      def expand_payment_method(pi)
+        pm_id = pi[:payment_method]
+        if pm_id.is_a?(String) && payment_methods[pm_id]
+          pi[:payment_method] = payment_methods[pm_id].clone
         end
       end
 
