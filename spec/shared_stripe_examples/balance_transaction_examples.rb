@@ -11,7 +11,7 @@ shared_examples 'Balance Transaction API' do
       Stripe::BalanceTransaction.retrieve(txn_id)
     }.to raise_error { |e|
       expect(e).to be_a(Stripe::InvalidRequestError)
-      expect(e.message).to eq('No such balance_transaction: ' + txn_id)
+      expect(e.message).to eq("No such balance_transaction: '#{txn_id}'")
     }
   end
 

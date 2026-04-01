@@ -209,7 +209,7 @@ shared_examples 'Customer Subscriptions with plans' do
       }.to raise_error {|e|
         expect(e).to be_a Stripe::InvalidRequestError
         expect(e.http_status).to eq(400)
-        expect(e.message).to eq('No such coupon: none')
+        expect(e.message).to eq("No such coupon: 'none'")
       }
     end
 
@@ -774,7 +774,7 @@ shared_examples 'Customer Subscriptions with plans' do
       expect { subscription.save }.to raise_error { |e|
         expect(e).to be_a(Stripe::InvalidRequestError)
         expect(e.http_status).to eq(404)
-        expect(e.message).to eq("No such subscription: #{subscription.id}")
+        expect(e.message).to eq("No such subscription: '#{subscription.id}'")
       }
     end
 
@@ -969,7 +969,7 @@ shared_examples 'Customer Subscriptions with plans' do
       expect { subscription.save }.to raise_error {|e|
                                                      expect(e).to be_a Stripe::InvalidRequestError
                                                      expect(e.http_status).to eq(400)
-                                                     expect(e.message).to eq('No such coupon: none')
+                                                     expect(e.message).to eq("No such coupon: 'none'")
                                                    }
 
     end

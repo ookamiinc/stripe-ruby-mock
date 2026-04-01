@@ -66,7 +66,7 @@ module StripeMock
           if coupon
             add_coupon_to_object(subscription, coupon)
           else
-            raise Stripe::InvalidRequestError.new("No such coupon: #{coupon_id}", 'coupon', http_status: 400)
+            raise Stripe::InvalidRequestError.new("No such coupon: '#{coupon_id}'", 'coupon', http_status: 400)
           end
         end
 
@@ -76,7 +76,7 @@ module StripeMock
           promotion_code = promotion_codes[promotion_code_id]
 
           unless promotion_code
-            raise Stripe::InvalidRequestError.new("No such promotion code: #{promotion_code_id}", 'promotion_code', http_status: 400)
+            raise Stripe::InvalidRequestError.new("No such promotion code: '#{promotion_code_id}'", 'promotion_code', http_status: 400)
           end
         end
 
@@ -139,7 +139,7 @@ module StripeMock
           if coupon
             add_coupon_to_object(subscription, coupon)
           else
-            raise Stripe::InvalidRequestError.new("No such coupon: #{coupon_id}", 'coupon', http_status: 400)
+            raise Stripe::InvalidRequestError.new("No such coupon: '#{coupon_id}'", 'coupon', http_status: 400)
           end
         end
 
@@ -149,7 +149,7 @@ module StripeMock
           promotion_code = promotion_codes[promotion_code_id]
 
           unless promotion_code
-            raise Stripe::InvalidRequestError.new("No such promotion code: #{promotion_code_id}", 'promotion_code', http_status: 400)
+            raise Stripe::InvalidRequestError.new("No such promotion code: '#{promotion_code_id}'", 'promotion_code', http_status: 400)
           end
         end
 
@@ -272,7 +272,7 @@ module StripeMock
           elsif coupon_id == ""
             subscription[:discount] = nil
           else
-            raise Stripe::InvalidRequestError.new("No such coupon: #{coupon_id}", 'coupon', http_status: 400)
+            raise Stripe::InvalidRequestError.new("No such coupon: '#{coupon_id}'", 'coupon', http_status: 400)
           end
         end
 
@@ -292,7 +292,7 @@ module StripeMock
               )
             end
           else
-            raise Stripe::InvalidRequestError.new("No such promotion code: #{promotion_code_id}", 'promotion_code', http_status: 400)
+            raise Stripe::InvalidRequestError.new("No such promotion code: '#{promotion_code_id}'", 'promotion_code', http_status: 400)
           end
         end
 
@@ -511,7 +511,7 @@ module StripeMock
         id, status = subscription.values_at(:id, :status)
 
         if status == 'canceled'
-          message = "No such subscription: #{id}"
+          message = "No such subscription: '#{id}'"
           raise Stripe::InvalidRequestError.new(message, 'subscription', http_status: 404)
         end
       end

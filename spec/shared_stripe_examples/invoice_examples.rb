@@ -308,7 +308,7 @@ shared_examples 'Invoice API' do
       it 'fails without a valid customer' do
         expect { Stripe::Invoice.upcoming(customer: 'whatever') }.to raise_error {|e|
           expect(e).to be_a(Stripe::InvalidRequestError)
-          expect(e.message).to eq('No such customer: whatever') }
+          expect(e.message).to eq("No such customer: 'whatever'") }
       end
 
       it 'fails without a customer parameter' do
@@ -713,7 +713,7 @@ shared_examples 'Invoice API' do
       it 'fails with invalid customer' do
         expect { Stripe::Invoice.create_preview(customer: 'nonexistent') }.to raise_error do |e|
           expect(e).to be_a(Stripe::InvalidRequestError)
-          expect(e.message).to eq('No such customer: nonexistent')
+          expect(e.message).to eq("No such customer: 'nonexistent'")
         end
       end
     end
@@ -761,7 +761,7 @@ shared_examples 'Invoice API' do
         }.to raise_error do |e|
           expect(e).to be_a(Stripe::InvalidRequestError)
           expect(e.http_status).to eq(404)
-          expect(e.message).to eq('No such subscription: sub_nonexistent')
+          expect(e.message).to eq("No such subscription: 'sub_nonexistent'")
         end
       end
     end

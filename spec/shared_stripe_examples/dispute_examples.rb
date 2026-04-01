@@ -12,7 +12,7 @@ shared_examples 'Dispute API' do
       Stripe::Dispute.retrieve(dispute_id)
     }.to raise_error { |e|
       expect(e).to be_a(Stripe::InvalidRequestError)
-      expect(e.message).to eq('No such dispute: ' + dispute_id)
+      expect(e.message).to eq("No such dispute: '#{dispute_id}'")
     }
   end
 

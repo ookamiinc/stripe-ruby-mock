@@ -7,7 +7,7 @@ module StripeMock
       end
 
       def not_found_message(obj_class, obj_id)
-        "No such #{obj_class.to_s.split("::").last.downcase}: #{obj_id}"
+        "No such #{obj_class.to_s.split("::").last.downcase}: '#{obj_id}'"
       end
 
       def missing_param_message(attr_name)

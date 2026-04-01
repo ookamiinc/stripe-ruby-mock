@@ -225,7 +225,7 @@ shared_examples 'Customer API' do
       Stripe::Customer.create(id: 'test_cus_no_plan', source: gen_card_tk, :plan => 'non-existant')
     }.to raise_error {|e|
       expect(e).to be_a(Stripe::InvalidRequestError)
-      expect(e.message).to eq('No such plan: non-existant')
+      expect(e.message).to eq("No such plan: 'non-existant'")
     }
   end
 
@@ -271,7 +271,7 @@ shared_examples 'Customer API' do
       Stripe::Customer.create(id: 'test_cus_no_coupon', coupon: '5OFF')
     }.to raise_error {|e|
       expect(e).to be_a(Stripe::InvalidRequestError)
-      expect(e.message).to eq('No such coupon: 5OFF')
+      expect(e.message).to eq("No such coupon: '5OFF'")
     }
   end
 
@@ -352,6 +352,14 @@ shared_examples 'Customer API' do
     all = Stripe::Customer.list
     expect(all.count).to eq(2)
     expect(all.data.map &:email).to include('one@one.com', 'two@two.com')
+  end
+
+  context "error messages" do
+    it "includes quotes around ID for non-existent customer" do
+      expect {
+        Stripe::Customer.retrieve('cus_nonexistent')
+      }.to raise_error(Stripe::InvalidRequestError, "No such customer: 'cus_nonexistent'")
+    end
   end
 
   context "updating a customer" do

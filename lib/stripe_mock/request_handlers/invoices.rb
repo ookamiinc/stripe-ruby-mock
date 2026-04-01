@@ -214,7 +214,7 @@ module StripeMock
         subscription = nil
         if params[:subscription]
           subscription = customer[:subscriptions][:data].select{|s|s[:id] == params[:subscription]}.first
-          raise Stripe::InvalidRequestError.new("No such subscription: #{params[:subscription]}", nil, http_status: 404) unless subscription
+          raise Stripe::InvalidRequestError.new("No such subscription: '#{params[:subscription]}'", nil, http_status: 404) unless subscription
         elsif customer[:subscriptions][:data].length > 0
           subscription = customer[:subscriptions][:data].min_by { |sub| sub[:current_period_end] }
         end
