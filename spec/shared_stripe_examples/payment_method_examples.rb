@@ -71,6 +71,10 @@ shared_examples 'PaymentMethod API' do
         expect(pm.id).to eq('pm_custom_id')
       end
 
+      it 'returns lowercase card brand' do
+        expect(payment_method.card.brand).to eq('visa')
+      end
+
       it 'includes created timestamp' do
         expect(payment_method.created).to be_a(Integer)
         expect(payment_method.created).to be > 0
