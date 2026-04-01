@@ -193,7 +193,10 @@ module StripeMock
           payment_intent: payment_intent[:id],
           amount: payment_intent[:amount],
           currency: payment_intent[:currency],
-          payment_method: payment_intent[:payment_method]
+          payment_method: payment_intent[:payment_method],
+          description: payment_intent[:description],
+          metadata: payment_intent[:metadata],
+          customer: payment_intent[:customer]
         )
 
         payment_intent[:latest_charge] = charge_id
