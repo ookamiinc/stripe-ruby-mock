@@ -66,6 +66,19 @@ shared_examples 'Customer Subscriptions with plans' do
       expect(subscriptions.data.first.metadata.example).to eq( "yes" )
     end
 
+    it "omits empty string metadata values" do
+      plan
+      customer = Stripe::Customer.create(source: gen_card_tk)
+      sub = Stripe::Subscription.create({
+        plan: 'silver',
+        customer: customer.id,
+        metadata: { foo: "bar", empty_val: "", nil_val: nil }
+      })
+      expect(sub.metadata.foo).to eq("bar")
+      expect(sub.metadata.to_hash).not_to have_key(:empty_val)
+      expect(sub.metadata.to_hash).not_to have_key(:nil_val)
+    end
+
     it "adds a new subscription to customer with none", live: true do
       plan
       customer = Stripe::Customer.create(source: gen_card_tk)

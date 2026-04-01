@@ -40,7 +40,9 @@ module StripeMock
         keys_to_merge = /application_fee_percent|quantity|metadata|tax_percent|billing|days_until_due|default_tax_rates|pending_invoice_item_interval|default_payment_method|collection_method|payment_settings/
         merged = options.select {|k,v| k =~ keys_to_merge && !v.nil?}
         if merged[:metadata]
-          merged[:metadata] = merged[:metadata].transform_values(&:to_s)
+          merged[:metadata] = merged[:metadata]
+            .reject { |_, v| v.nil? || v.to_s.empty? }
+            .transform_values(&:to_s)
         end
         params.merge! merged
 
