@@ -346,25 +346,25 @@ module StripeMock
         # Check for pending payment action (3DS) or queued card error
         # This simulates incomplete subscriptions from authentication or decline
         card_error = @error_queue.error_for_handler_name(:subscription_update)
+        pi_status_override = nil
         if @pending_payment_action
           subscription[:status] = 'incomplete'
           subscriptions[subscription[:id]][:status] = 'incomplete'
-          @update_subscription_pi_status = @pending_payment_action
+          pi_status_override = @pending_payment_action
           @pending_payment_action = nil
         elsif card_error
           @error_queue.dequeue
           subscription[:status] = 'incomplete'
           subscriptions[subscription[:id]][:status] = 'incomplete'
-          @update_subscription_pi_status = 'requires_payment_method'
-        else
-          @update_subscription_pi_status = nil
+          pi_status_override = 'requires_payment_method'
         end
 
         if params[:expand]
           subscription = subscription.clone
-          force_new_invoice = params.key?(:billing_cycle_anchor) || !@update_subscription_pi_status.nil?
+          force_new_invoice = params.key?(:billing_cycle_anchor) || !pi_status_override.nil?
           generate_subscription_invoice_if_needed(
-            subscription, params[:expand], force_new: force_new_invoice
+            subscription, params[:expand],
+            force_new: force_new_invoice, pi_status_override: pi_status_override
           )
           expand_subscription_fields(subscription, params[:expand], stripe_account)
         end
@@ -466,7 +466,7 @@ module StripeMock
         raise Stripe::InvalidRequestError.new('This customer has no attached payment source', nil, http_status: 400)
       end
 
-      def generate_subscription_invoice_if_needed(subscription, expand_list, force_new: false)
+      def generate_subscription_invoice_if_needed(subscription, expand_list, force_new: false, pi_status_override: nil)
         needs_invoice = expand_list.any? { |s| s.start_with?('latest_invoice') }
         return unless needs_invoice
 
@@ -483,8 +483,8 @@ module StripeMock
 
         pi_value = nil
         unless subscription[:status] == 'trialing'
-          pi_status = if @update_subscription_pi_status
-                        @update_subscription_pi_status
+          pi_status = if pi_status_override
+                        pi_status_override
                       elsif subscription[:status] == 'incomplete'
                         'requires_payment_method'
                       else
