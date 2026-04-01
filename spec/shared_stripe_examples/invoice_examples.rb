@@ -207,6 +207,18 @@ shared_examples 'Invoice API' do
       expect(@invoice.charge.length).to be > 0
     end
 
+    it 'sets hosted_invoice_url when paid' do
+      @invoice = @invoice.pay
+      expect(@invoice.hosted_invoice_url).to be_a(String)
+      expect(@invoice.hosted_invoice_url).to include('https://invoice.stripe.com')
+    end
+
+    it 'sets invoice_pdf when paid' do
+      @invoice = @invoice.pay
+      expect(@invoice.invoice_pdf).to be_a(String)
+      expect(@invoice.invoice_pdf).to include('https://pay.stripe.com')
+    end
+
     it 'charges the invoice customers default card' do
       customer = Stripe::Customer.create({
         source: stripe_helper.generate_card_token

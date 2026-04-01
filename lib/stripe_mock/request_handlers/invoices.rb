@@ -68,6 +68,8 @@ module StripeMock
           :status => "paid",
           :attempted => true,
           :charge => charge[:id],
+          :hosted_invoice_url => "https://invoice.stripe.com/i/acct_test/test/#{$1}",
+          :invoice_pdf => "https://pay.stripe.com/invoice/acct_test/test/#{$1}/pdf",
         )
       end
 
