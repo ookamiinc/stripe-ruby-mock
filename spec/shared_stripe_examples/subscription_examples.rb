@@ -1437,6 +1437,16 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.collection_method).to eq('send_invoice')
   end
 
+  it "sets billing_cycle_anchor as a timestamp on create" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }]
+    )
+    expect(sub.billing_cycle_anchor).to be_a(Integer)
+    expect(sub.billing_cycle_anchor).to be > 0
+  end
+
   it "expands latest_invoice.payment_intent.payment_method on create" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     sub = Stripe::Subscription.create(
