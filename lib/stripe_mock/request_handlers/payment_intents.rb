@@ -18,6 +18,11 @@ module StripeMock
         id = new_id('pi')
 
         ensure_payment_intent_required_params(params)
+        # @pending_payment_action is also consumed by create_subscription
+        # and update_subscription (for subscription-scoped 3DS/decline).
+        # Whichever handler runs first consumes it. This is safe because
+        # subscriptions create PIs via Data.mock_payment_intent directly,
+        # not through this handler.
         status = if @pending_payment_action
                    action = @pending_payment_action
                    @pending_payment_action = nil

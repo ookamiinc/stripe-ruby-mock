@@ -1401,6 +1401,33 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.latest_invoice.payment_intent.status).to eq('requires_action')
   end
 
+  it "clears pending_payment_action after subscription create so it does not leak" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    StripeMock.prepare_payment_action(:requires_action)
+    Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    # Subsequent PI should not be affected by the consumed flag
+    pi = Stripe::PaymentIntent.create(amount: 500, currency: 'usd')
+    expect(pi.status).to eq('succeeded')
+  end
+
+  it "clears pending_payment_action after standalone PI create so it does not leak to subscription" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    StripeMock.prepare_payment_action(:requires_action)
+    pi = Stripe::PaymentIntent.create(amount: 500, currency: 'usd')
+    expect(pi.status).to eq('requires_action')
+    # Subsequent subscription should not be affected
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    expect(sub.status).to eq('active')
+  end
+
   it "ignores empty string default_payment_method on update" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     pm = Stripe::PaymentMethod.create(type: 'card', card: { number: '4242424242424242', exp_month: 12, exp_year: 2030, cvc: '123' })
