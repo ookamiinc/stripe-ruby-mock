@@ -343,7 +343,7 @@ module StripeMock
         customer[:subscriptions][:data].reject! { |sub| sub[:id] == subscription[:id] }
         customer[:subscriptions][:data] << subscription
 
-        if params[:default_payment_method] && !payment_methods[params[:default_payment_method]]
+        if params[:default_payment_method] && !params[:default_payment_method].to_s.empty? && !payment_methods[params[:default_payment_method]]
           pm_id = params[:default_payment_method]
           raise Stripe::InvalidRequestError.new(
             "No such PaymentMethod: '#{pm_id}'; It's possible this PaymentMethod exists on one of your connected accounts, in which case you should retry this request on that connected account. Learn more at https://stripe.com/docs/connect/authentication",

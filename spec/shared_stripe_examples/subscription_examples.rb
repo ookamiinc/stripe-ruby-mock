@@ -1401,6 +1401,20 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.latest_invoice.payment_intent.status).to eq('requires_action')
   end
 
+  it "ignores empty string default_payment_method on update" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    updated = Stripe::Subscription.update(sub.id, {
+      default_payment_method: '',
+      expand: ['latest_invoice.payment_intent']
+    })
+    expect(updated.status).to eq('active')
+  end
+
   it "updates subscription to incomplete on card decline" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     sub = Stripe::Subscription.create(
