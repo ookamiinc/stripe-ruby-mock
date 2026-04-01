@@ -182,7 +182,7 @@ module StripeMock
               amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
               currency: plan_or_price[:currency]
             })
-            payment_intent = s.include?('latest_invoice.payment_intent') ? intent : intent.id
+            payment_intent = s.include?('latest_invoice.payment_intent') ? intent : intent[:id]
           end
           invoice = Data.mock_invoice([], { payment_intent: payment_intent })
           subscription[:latest_invoice] = invoice
@@ -195,9 +195,17 @@ module StripeMock
       end
 
       def retrieve_subscription(route, method_url, params, headers)
+        stripe_account = headers && headers[:stripe_account] || Stripe.api_key
         route =~ method_url
 
-        assert_existence :subscription, $1, subscriptions[$1]
+        subscription = assert_existence :subscription, $1, subscriptions[$1]
+        subscription = subscription.clone
+
+        if params[:expand]
+          expand_subscription_fields(subscription, params[:expand], stripe_account)
+        end
+
+        subscription
       end
 
       def retrieve_subscriptions(route, method_url, params, headers)
@@ -412,6 +420,53 @@ module StripeMock
         return if params[:billing] == 'send_invoice'
 
         raise Stripe::InvalidRequestError.new('This customer has no attached payment source', nil, http_status: 400)
+      end
+
+      def expand_subscription_fields(subscription, expand_list, stripe_account)
+        expand_list.each do |field|
+          case field
+          when 'customer'
+            customer_id = subscription[:customer]
+            customer = customers[stripe_account][customer_id] if customer_id
+            subscription[:customer] = customer if customer
+          when 'default_payment_method'
+            pm_id = subscription[:default_payment_method]
+            pm = payment_methods[pm_id] if pm_id
+            subscription[:default_payment_method] = pm if pm
+          when 'latest_invoice'
+            invoice_id = subscription[:latest_invoice]
+            if invoice_id.is_a?(String)
+              invoice = invoices[invoice_id]
+              subscription[:latest_invoice] = invoice.clone if invoice
+            end
+          when 'latest_invoice.payment_intent'
+            invoice_id = subscription[:latest_invoice]
+            if invoice_id.is_a?(String)
+              invoice = invoices[invoice_id]
+              if invoice
+                invoice = invoice.clone
+                pi_id = invoice[:payment_intent]
+                if pi_id.is_a?(String)
+                  pi = payment_intents[pi_id]
+                  invoice[:payment_intent] = pi.clone if pi
+                end
+                subscription[:latest_invoice] = invoice
+              end
+            elsif invoice_id.is_a?(Hash)
+              pi_id = invoice_id[:payment_intent]
+              if pi_id.is_a?(String)
+                pi = payment_intents[pi_id]
+                invoice_id[:payment_intent] = pi.clone if pi
+              end
+            end
+          when /^customer\./
+            # Expand nested customer fields (e.g., customer.default_source)
+            customer_id = subscription[:customer]
+            customer_id = customer_id[:id] if customer_id.is_a?(Hash)
+            customer = customers[stripe_account][customer_id] if customer_id
+            subscription[:customer] = customer if customer
+          end
+        end
       end
 
       def verify_active_status(subscription)

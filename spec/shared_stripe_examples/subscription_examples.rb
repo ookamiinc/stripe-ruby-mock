@@ -1386,6 +1386,45 @@ shared_examples 'Customer Subscriptions with plans' do
     end
   end
 
+  context 'retrieving a subscription with expand' do
+    let(:customer) { Stripe::Customer.create(source: gen_card_tk, email: 'expand@test.com') }
+
+    before { plan }
+
+    it 'expands customer object' do
+      sub = Stripe::Subscription.create(customer: customer.id, items: [{ plan: plan.id }])
+      retrieved = Stripe::Subscription.retrieve(id: sub.id, expand: ['customer'])
+
+      expect(retrieved.customer).to respond_to(:email)
+      expect(retrieved.customer.email).to eq('expand@test.com')
+    end
+
+    it 'expands default_payment_method object' do
+      pm = Stripe::PaymentMethod.create(type: 'card', card: { number: 4242424242424242, exp_month: 12, exp_year: 2030, cvc: 123 })
+      Stripe::PaymentMethod.attach(pm.id, customer: customer.id)
+      sub = Stripe::Subscription.create(customer: customer.id, items: [{ plan: plan.id }], default_payment_method: pm.id)
+      retrieved = Stripe::Subscription.retrieve(id: sub.id, expand: ['default_payment_method'])
+
+      expect(retrieved.default_payment_method).to respond_to(:type)
+      expect(retrieved.default_payment_method.id).to eq(pm.id)
+    end
+
+    it 'expands latest_invoice object' do
+      sub = Stripe::Subscription.create(customer: customer.id, items: [{ plan: plan.id }], expand: ['latest_invoice'])
+      retrieved = Stripe::Subscription.retrieve(id: sub.id, expand: ['latest_invoice'])
+
+      expect(retrieved.latest_invoice).to respond_to(:status)
+    end
+
+    it 'expands latest_invoice.payment_intent' do
+      sub = Stripe::Subscription.create(customer: customer.id, items: [{ plan: plan.id }], expand: ['latest_invoice.payment_intent'])
+      retrieved = Stripe::Subscription.retrieve(id: sub.id, expand: ['latest_invoice.payment_intent'])
+
+      expect(retrieved.latest_invoice).to respond_to(:status)
+      expect(retrieved.latest_invoice.payment_intent).to respond_to(:status)
+    end
+  end
+
   context "retrieve multiple subscriptions" do
 
     it "retrieves a list of multiple subscriptions" do
