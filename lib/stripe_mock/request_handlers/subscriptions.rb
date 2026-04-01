@@ -424,6 +424,7 @@ module StripeMock
         end
 
         return if params[:billing] == 'send_invoice'
+        return if params[:collection_method] == 'send_invoice'
 
         raise Stripe::InvalidRequestError.new('This customer has no attached payment source', nil, http_status: 400)
       end

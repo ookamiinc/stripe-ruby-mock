@@ -1350,6 +1350,17 @@ shared_examples 'Customer Subscriptions with plans' do
     Stripe::Subscription.create options
   end
 
+  it "doesn't require a card when collection_method is send_invoice" do
+    stripe_customer = Stripe::Customer.create
+    sub = Stripe::Subscription.create(
+      customer: stripe_customer.id,
+      items: [{ plan: plan.id }],
+      collection_method: 'send_invoice',
+      days_until_due: 7
+    )
+    expect(sub.collection_method).to eq('send_invoice')
+  end
+
   context 'updating a subscription with expand' do
     it 'expands latest_invoice.payment_intent on update' do
       customer = Stripe::Customer.create(source: gen_card_tk)
