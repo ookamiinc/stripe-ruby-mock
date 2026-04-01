@@ -32,7 +32,7 @@ module StripeMock
       when :invalid_cvc then build_card_error("The card's security code is invalid", 'cvc', code: 'invalid_cvc', http_status: 402)
       when :expired_card then build_card_error('Your card has expired.', 'exp_month', code: 'expired_card', http_status: 402)
       when :incorrect_cvc then build_card_error("The card's security code is incorrect", 'cvc', code: 'incorrect_cvc', http_status: 402)
-      when :card_declined then build_card_error('The card was declined', nil, code: 'card_declined', http_status: 402)
+      when :card_declined then build_card_error('Your card was declined.', nil, code: 'card_declined', http_status: 402)
       when :missing then build_card_error('There is no card on a customer that is being charged.', nil, code: 'missing', http_status: 402)
       when :processing_error then build_card_error('An error occurred while processing the card', nil, code: 'processing_error', http_status: 402)
       when :card_error then build_card_error('The card number is not a valid credit card number.', 'number', code: 'invalid_number', http_status: 402)
