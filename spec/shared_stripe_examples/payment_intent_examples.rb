@@ -30,6 +30,7 @@ shared_examples 'PaymentIntent API' do
     expect(payment_intent.currency).to eq('usd')
     expect(payment_intent.metadata.to_hash).to eq({})
     expect(payment_intent.status).to eq('succeeded')
+    expect(payment_intent.next_action).to be_nil
     expect(payment_intent.statement_descriptor).to be_nil
     expect(payment_intent.statement_descriptor_suffix).to be_nil
   end
