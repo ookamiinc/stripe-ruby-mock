@@ -120,17 +120,20 @@ module StripeMock
           require_param(:currency)
         elsif non_integer_charge_amount?(params)
           raise Stripe::InvalidRequestError.new("Invalid integer: #{params[:amount]}", 'amount', http_status: 400)
-        elsif non_positive_charge_amount?(params)
-          raise Stripe::InvalidRequestError.new('Invalid positive integer', 'amount', http_status: 400)
+        else
+          params[:amount] = params[:amount].to_i
+          if params[:amount] < 1
+            raise Stripe::InvalidRequestError.new('Invalid positive integer', 'amount', http_status: 400)
+          end
         end
       end
 
       def non_integer_charge_amount?(params)
-        params[:amount] && !params[:amount].is_a?(Integer)
-      end
+        return false unless params[:amount]
+        return false if params[:amount].is_a?(Integer)
+        return false if params[:amount].is_a?(String) && params[:amount].match?(/\A\d+\z/)
 
-      def non_positive_charge_amount?(params)
-        params[:amount] && params[:amount] < 1
+        true
       end
 
       def last_payment_error_generator(code: nil, message: nil, decline_code: nil)

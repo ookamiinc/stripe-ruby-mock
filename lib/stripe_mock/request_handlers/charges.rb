@@ -166,15 +166,22 @@ module StripeMock
           require_param(:currency)
         elsif non_integer_charge_amount?(params)
           raise Stripe::InvalidRequestError.new("Invalid integer: #{params[:amount]}", 'amount', http_status: 400)
-        elsif non_positive_charge_amount?(params)
-          raise Stripe::InvalidRequestError.new('Invalid positive integer', 'amount', http_status: 400)
-        elsif params[:source].nil? && params[:customer].nil?
-          raise Stripe::InvalidRequestError.new('Must provide source or customer.', nil, http_status: nil)
+        else
+          params[:amount] = params[:amount].to_i
+          if params[:amount] < 1
+            raise Stripe::InvalidRequestError.new('Invalid positive integer', 'amount', http_status: 400)
+          elsif params[:source].nil? && params[:customer].nil?
+            raise Stripe::InvalidRequestError.new('Must provide source or customer.', nil, http_status: nil)
+          end
         end
       end
 
       def non_integer_charge_amount?(params)
-        params[:amount] && !params[:amount].is_a?(Integer)
+        return false unless params[:amount]
+        return false if params[:amount].is_a?(Integer)
+        return false if params[:amount].is_a?(String) && params[:amount].match?(/\A\d+\z/)
+
+        true
       end
 
       def non_positive_charge_amount?(params)

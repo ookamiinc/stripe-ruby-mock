@@ -7,6 +7,12 @@ shared_examples 'PaymentIntent API' do
     Stripe::Customer.create(email: 'alice@bob.com', source: token.id)
   end
 
+  it "accepts string amount and coerces to integer" do
+    pi = Stripe::PaymentIntent.create(amount: "500", currency: "usd")
+    expect(pi.amount).to eq(500)
+    expect(pi.status).to eq('succeeded')
+  end
+
   it "creates a succeeded stripe payment_intent" do
     payment_intent = Stripe::PaymentIntent.create(amount:  100, currency: "usd")
 
