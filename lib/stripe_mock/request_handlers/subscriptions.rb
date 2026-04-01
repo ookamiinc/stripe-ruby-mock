@@ -502,8 +502,30 @@ module StripeMock
                 invoice_id[:payment_intent] = pi.clone if pi
               end
             end
+          when 'customer.default_source'
+            customer_obj = subscription[:customer]
+            customer_obj = customers[stripe_account][customer_obj] if customer_obj.is_a?(String)
+            if customer_obj
+              subscription[:customer] = customer_obj unless subscription[:customer].is_a?(Hash)
+              source_id = customer_obj[:default_source]
+              if source_id.is_a?(String)
+                source = customer_obj.dig(:sources, :data)&.find { |s| s[:id] == source_id }
+                subscription[:customer][:default_source] = source if source
+              end
+            end
+          when 'customer.invoice_settings.default_payment_method'
+            customer_obj = subscription[:customer]
+            customer_obj = customers[stripe_account][customer_obj] if customer_obj.is_a?(String)
+            if customer_obj
+              subscription[:customer] = customer_obj unless subscription[:customer].is_a?(Hash)
+              pm_id = customer_obj.dig(:invoice_settings, :default_payment_method)
+              if pm_id.is_a?(String)
+                pm = payment_methods[pm_id]
+                subscription[:customer][:invoice_settings][:default_payment_method] = pm if pm
+              end
+            end
           when /^customer\./
-            # Expand nested customer fields (e.g., customer.default_source)
+            # Generic customer expansion fallback
             customer_id = subscription[:customer]
             customer_id = customer_id[:id] if customer_id.is_a?(Hash)
             customer = customers[stripe_account][customer_id] if customer_id
