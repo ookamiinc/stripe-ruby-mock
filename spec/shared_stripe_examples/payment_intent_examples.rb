@@ -20,6 +20,21 @@ shared_examples 'PaymentIntent API' do
     expect(payment_intent.statement_descriptor_suffix).to be_nil
   end
 
+  it "has empty charges.data and total_count 0 before confirmation" do
+    payment_intent = Stripe::PaymentIntent.create(amount: 3184, currency: "usd")
+
+    expect(payment_intent.charges.data).to eq([])
+    expect(payment_intent.charges.total_count).to eq(0)
+  end
+
+  it "populates charges.data after confirmation" do
+    payment_intent = Stripe::PaymentIntent.create(amount: 100, currency: "usd", confirm: true)
+
+    expect(payment_intent.charges.data.length).to eq(1)
+    expect(payment_intent.charges.total_count).to eq(1)
+    expect(payment_intent.charges.data[0].id).to eq(payment_intent.latest_charge)
+  end
+
   it "creates a requires_action stripe payment_intent when amount matches 3184" do
     payment_intent = Stripe::PaymentIntent.create(amount:  3184, currency: "usd")
 

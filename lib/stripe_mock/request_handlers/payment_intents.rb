@@ -200,6 +200,8 @@ module StripeMock
         )
 
         payment_intent[:latest_charge] = charge_id
+        payment_intent[:charges][:data] = [charges[charge_id]]
+        payment_intent[:charges][:total_count] = 1
 
         payment_intent
       end

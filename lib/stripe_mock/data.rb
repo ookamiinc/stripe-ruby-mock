@@ -1386,8 +1386,8 @@ module StripeMock
               object: "list",
               data: [],
               has_more: false,
-              total_count: 1,
-              url: "/v1/charges?payment_intent=pi_1EwXFB2eZvKYlo2CggNnFBo8"
+              total_count: 0,
+              url: "/v1/charges?payment_intent=#{payment_intent_id}"
           },
           client_secret: "pi_1EwXFB2eZvKYlo2CggNnFBo8_secret_vOMkpqZu8ca7hxhfiO80tpT3v",
           confirmation_method: "manual",
