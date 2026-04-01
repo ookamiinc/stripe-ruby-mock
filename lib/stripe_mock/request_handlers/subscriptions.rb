@@ -319,6 +319,15 @@ module StripeMock
 
         subscription = resolve_subscription_changes(subscription, subscription_plans, customer, params)
 
+        # Fix current_period_end for billing_cycle_anchor updates
+        # resolve_subscription_changes sets end = anchor, but for updates
+        # it should be anchor + interval
+        if params[:billing_cycle_anchor]
+          plan = subscription_plans.first
+          subscription[:current_period_start] = params[:billing_cycle_anchor]
+          subscription[:current_period_end] = get_ending_time(params[:billing_cycle_anchor], plan)
+        end
+
         current_amount = subscription.dig(:plan, :amount) || subscription.dig(:plan, :unit_amount) || subscription.dig(:items, :data, 0, :price, :unit_amount)
         verify_card_present(customer, subscription_plans.first, subscription, params) if plan_amount_was == 0 && current_amount && current_amount > 0
 
@@ -334,9 +343,23 @@ module StripeMock
           )
         end
 
+        # Check for queued card error - set incomplete instead of raising
+        # This simulates real Stripe's behavior for 3DS and card failures
+        card_error = @error_queue.error_for_handler_name(:subscription_update)
+        if card_error
+          @error_queue.dequeue
+          error_code = card_error.code rescue nil
+          subscription[:status] = 'incomplete'
+          subscriptions[subscription[:id]][:status] = 'incomplete'
+          @update_subscription_pi_status =
+            error_code == 'requires_action' ? 'requires_action' : 'requires_payment_method'
+        else
+          @update_subscription_pi_status = nil
+        end
+
         if params[:expand]
           subscription = subscription.clone
-          force_new_invoice = params.key?(:billing_cycle_anchor)
+          force_new_invoice = params.key?(:billing_cycle_anchor) || !@update_subscription_pi_status.nil?
           generate_subscription_invoice_if_needed(
             subscription, params[:expand], force_new: force_new_invoice
           )
@@ -457,9 +480,16 @@ module StripeMock
 
         pi_value = nil
         unless subscription[:status] == 'trialing'
+          pi_status = if @update_subscription_pi_status
+                        @update_subscription_pi_status
+                      elsif subscription[:status] == 'incomplete'
+                        'requires_payment_method'
+                      else
+                        'succeeded'
+                      end
           intent = Data.mock_payment_intent({
             id: new_id('pi'),
-            status: subscription[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded',
+            status: pi_status,
             amount: plan_or_price[:amount] || plan_or_price[:unit_amount],
             currency: plan_or_price[:currency]
           })

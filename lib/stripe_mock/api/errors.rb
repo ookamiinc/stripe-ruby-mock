@@ -40,6 +40,7 @@ module StripeMock
       when :insufficient_funds then build_card_error('The card has insufficient funds to complete the purchase.', nil, code: 'insufficient_funds', http_status: 402)
       when :lost_card then build_card_error('The payment has been declined because the card is reported lost.', nil, code: 'lost_card', http_status: 402)
       when :stolen_card then build_card_error('The payment has been declined because the card is reported stolen.', nil, code: 'stolen_card', http_status: 402)
+      when :requires_action then build_card_error('The payment requires authentication.', nil, code: 'requires_action', http_status: 402)
       end
     end
 
