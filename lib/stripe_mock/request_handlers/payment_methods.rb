@@ -89,7 +89,8 @@ module StripeMock
 
         id = method_url.match(route)[1]
 
-        payment_method = assert_existence :payment_method, id, payment_methods[id]
+        payment_method = assert_existence :payment_method, id, payment_methods[id],
+          pm_not_found_message(id)
 
         if payment_method[:customer].nil?
           raise Stripe::InvalidRequestError.new(
@@ -99,7 +100,11 @@ module StripeMock
           )
         end
 
-        validate_card_expiration(params[:card]) if params[:card]
+        if params[:card]
+          validate_card_expiration(params[:card])
+          params[:card][:exp_month] = params[:card][:exp_month].to_i if params[:card][:exp_month]
+          params[:card][:exp_year] = params[:card][:exp_year].to_i if params[:card][:exp_year]
+        end
 
         payment_methods[id] =
           Util.rmerge(payment_method, params.select { |k, _v| allowed_params.include?(k)} )
