@@ -185,7 +185,7 @@ module StripeMock
       end
 
       def non_positive_charge_amount?(params)
-        params[:amount] && params[:amount] < 1
+        params[:amount] && params[:amount].to_i < 1
       end
 
       def allowed_params(params)

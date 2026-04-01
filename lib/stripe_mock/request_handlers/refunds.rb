@@ -31,6 +31,7 @@ module StripeMock
         end
         params[:amount] ||= payment_intent[:amount]
         params[:amount] ||= charge[:amount]
+        params[:amount] = params[:amount].to_i if params[:amount].is_a?(String)
         id = new_id('re')
         bal_trans_params = {
           amount: params[:amount] * -1,

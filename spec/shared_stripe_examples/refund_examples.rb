@@ -34,6 +34,20 @@ shared_examples 'Refund API' do
       expect(refund.amount).to eq(999)
     end
 
+    it "refunds a charge with a string amount" do
+      charge = Stripe::Charge.create(
+        amount: 999,
+        currency: 'USD',
+        source: stripe_helper.generate_card_token,
+        description: 'card charge'
+      )
+      refund = Stripe::Refund.create(
+        charge: charge.id,
+        amount: '500'
+      )
+      expect(refund.amount).to eq(500)
+    end
+
 
     it "creates a stripe refund with a status" do
       charge = Stripe::Charge.create(
