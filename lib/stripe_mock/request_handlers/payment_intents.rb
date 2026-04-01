@@ -141,14 +141,6 @@ module StripeMock
         end
       end
 
-      def non_integer_charge_amount?(params)
-        return false unless params[:amount]
-        return false if params[:amount].is_a?(Integer)
-        return false if params[:amount].is_a?(String) && params[:amount].match?(/\A\d+\z/)
-
-        true
-      end
-
       def last_payment_error_generator(code: nil, message: nil, decline_code: nil)
         {
           code: code,
