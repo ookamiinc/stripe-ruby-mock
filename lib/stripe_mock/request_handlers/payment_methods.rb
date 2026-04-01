@@ -117,7 +117,7 @@ module StripeMock
       end
 
       def valid_types
-        %w(card ideal sepa_debit us_bank_account)
+        %w(card ideal sepa_debit us_bank_account konbini link)
       end
 
       def invalid_type?(type)
