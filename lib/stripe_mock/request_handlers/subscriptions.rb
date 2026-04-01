@@ -326,9 +326,17 @@ module StripeMock
         customer[:subscriptions][:data].reject! { |sub| sub[:id] == subscription[:id] }
         customer[:subscriptions][:data] << subscription
 
+        if params[:default_payment_method]
+          assert_existence :payment_method, params[:default_payment_method],
+                           payment_methods[params[:default_payment_method]]
+        end
+
         if params[:expand]
           subscription = subscription.clone
-          generate_subscription_invoice_if_needed(subscription, params[:expand])
+          force_new_invoice = params.key?(:billing_cycle_anchor)
+          generate_subscription_invoice_if_needed(
+            subscription, params[:expand], force_new: force_new_invoice
+          )
           expand_subscription_fields(subscription, params[:expand], stripe_account)
         end
 
@@ -429,14 +437,16 @@ module StripeMock
         raise Stripe::InvalidRequestError.new('This customer has no attached payment source', nil, http_status: 400)
       end
 
-      def generate_subscription_invoice_if_needed(subscription, expand_list)
+      def generate_subscription_invoice_if_needed(subscription, expand_list, force_new: false)
         needs_invoice = expand_list.any? { |s| s.start_with?('latest_invoice') }
         return unless needs_invoice
 
-        # If latest_invoice is already stored, no need to generate
-        invoice_id = subscription[:latest_invoice]
-        return if invoice_id.is_a?(Hash)
-        return if invoice_id.is_a?(String) && invoices[invoice_id]
+        # If latest_invoice is already stored, no need to generate (unless forced)
+        unless force_new
+          invoice_id = subscription[:latest_invoice]
+          return if invoice_id.is_a?(Hash)
+          return if invoice_id.is_a?(String) && invoices[invoice_id]
+        end
 
         # Generate invoice for expansion (e.g., trialing subs without stored invoice)
         plan_or_price = subscription[:plan] || subscription.dig(:items, :data, 0, :price)
@@ -455,11 +465,23 @@ module StripeMock
           pi_value = expand_pi ? intent : intent[:id]
         end
 
+        is_incomplete = subscription[:status] == 'incomplete'
+        is_send_invoice = subscription[:collection_method] == 'send_invoice'
+        invoice_status = if is_send_invoice
+                           'draft'
+                         elsif is_incomplete
+                           'open'
+                         else
+                           'paid'
+                         end
+
         invoice = Data.mock_invoice([], {
           id: new_id('in'),
           payment_intent: pi_value,
           subscription: subscription[:id],
-          customer: subscription[:customer]
+          customer: subscription[:customer],
+          status: invoice_status,
+          paid: (!is_incomplete && !is_send_invoice)
         })
         invoices[invoice[:id]] = invoice
         subscription[:latest_invoice] = invoice
