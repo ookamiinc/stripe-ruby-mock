@@ -358,12 +358,22 @@ shared_examples 'PaymentMethod API' do
       end
     end
 
-    context 'with invalid expiration year' do
+    context 'with two-digit expiration year' do
       it 'raises invalid_expiry_year error' do
         pm = Stripe::PaymentMethod.create(type: 'card', card: card_details)
         Stripe::PaymentMethod.attach(pm.id, customer: customer.id)
         expect {
           Stripe::PaymentMethod.update(pm.id, card: { exp_month: 6, exp_year: 19 })
+        }.to raise_error(Stripe::InvalidRequestError, /expiration year is invalid/)
+      end
+    end
+
+    context 'with past expiration year' do
+      it 'raises invalid_expiry_year error' do
+        pm = Stripe::PaymentMethod.create(type: 'card', card: card_details)
+        Stripe::PaymentMethod.attach(pm.id, customer: customer.id)
+        expect {
+          Stripe::PaymentMethod.update(pm.id, card: { exp_month: 6, exp_year: 2020 })
         }.to raise_error(Stripe::InvalidRequestError, /expiration year is invalid/)
       end
     end

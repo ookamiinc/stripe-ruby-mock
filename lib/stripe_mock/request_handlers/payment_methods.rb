@@ -131,7 +131,10 @@ module StripeMock
       end
 
       def validate_card_expiration(card)
-        if card[:exp_year] && card[:exp_year].to_i < 100
+        return unless card[:exp_year]
+
+        year = card[:exp_year].to_i
+        if year < 100 || year < Time.now.utc.year
           raise Stripe::InvalidRequestError.new(
             "Your card's expiration year is invalid.",
             'exp_year', http_status: 400
