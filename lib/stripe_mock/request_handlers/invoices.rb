@@ -77,12 +77,41 @@ module StripeMock
 
       def send_invoice(route, method_url, params, headers)
         route =~ method_url
-        assert_existence :invoice, $1, invoices[$1]
-        invoices[$1].merge!(
+        invoice = assert_existence :invoice, $1, invoices[$1]
+
+        # Create payment_intent if not already present (e.g., konbini invoices)
+        unless invoice[:payment_intent]
+          amount = invoice[:amount_due] || invoice[:total] || 0
+          pi_id = new_id('pi')
+          pi = Data.mock_payment_intent(
+            id: pi_id, status: 'requires_payment_method',
+            amount: amount, currency: invoice[:currency],
+            customer: invoice[:customer]
+          )
+          payment_intents[pi_id] = pi
+          invoice[:payment_intent] = pi_id
+        end
+
+        invoice.merge!(
           :status => "open",
           :hosted_invoice_url => "https://invoice.stripe.com/i/acct_test/test/#{$1}",
           :invoice_pdf => "https://pay.stripe.com/invoice/acct_test/test/#{$1}/pdf",
         )
+
+        result = invoice.clone
+        if params[:expand]
+          params[:expand].each do |field|
+            case field
+            when /^payment_intent/
+              pi_id = result[:payment_intent]
+              if pi_id.is_a?(String) && payment_intents[pi_id]
+                result[:payment_intent] = payment_intents[pi_id].clone
+              end
+            end
+          end
+        end
+
+        result
       end
 
       def void_invoice(route, method_url, params, headers)

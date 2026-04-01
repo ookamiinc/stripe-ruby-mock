@@ -1350,6 +1350,20 @@ shared_examples 'Customer Subscriptions with plans' do
     Stripe::Subscription.create options
   end
 
+  it "creates incomplete subscription for send_invoice with draft invoice" do
+    customer = Stripe::Customer.create
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      collection_method: 'send_invoice',
+      days_until_due: 7,
+      expand: ['latest_invoice']
+    )
+    expect(sub.status).to eq('active')
+    expect(sub.latest_invoice.status).to eq('draft')
+    expect(sub.latest_invoice.payment_intent).to be_nil
+  end
+
   it "expands customer on create" do
     customer = Stripe::Customer.create(source: gen_card_tk, email: 'create@test.com')
     sub = Stripe::Subscription.create(

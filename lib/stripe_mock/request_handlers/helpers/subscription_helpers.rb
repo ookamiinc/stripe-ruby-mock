@@ -97,32 +97,47 @@ module StripeMock
             subscription: sub[:id],
             metadata: sub[:metadata] || {}
           )
+          is_incomplete = sub[:status] == 'incomplete'
+          is_send_invoice = sub[:collection_method] == 'send_invoice'
+
+          invoice_status = if is_send_invoice
+                             'draft'
+                           elsif is_incomplete
+                             'open'
+                           else
+                             'paid'
+                           end
+
           invoice = Data.mock_invoice([invoice_line],
             id: in_id,
             customer: cus[:id],
             customer_name: cus[:name],
             subscription: sub[:id],
+            status: invoice_status,
+            paid: (!is_incomplete && !is_send_invoice),
             metadata: sub[:metadata] || {}
           )
-          invoices[in_id] = invoice
 
-          pi_id = new_id('pi')
-          intent_status = sub[:status] == 'incomplete' ? 'requires_payment_method' : 'succeeded'
-          pi = Data.mock_payment_intent(
-            id: pi_id, status: intent_status,
-            amount: amount, currency: (plan_or_price[:currency] rescue nil),
-            customer: cus[:id]
-          )
-          payment_intents[pi_id] = pi
+          pi_id = nil
+          unless is_send_invoice
+            pi_id = new_id('pi')
+            intent_status = is_incomplete ? 'requires_payment_method' : 'succeeded'
+            pi = Data.mock_payment_intent(
+              id: pi_id, status: intent_status,
+              amount: amount, currency: (plan_or_price[:currency] rescue nil),
+              customer: cus[:id]
+            )
+            payment_intents[pi_id] = pi
 
-          charges[id] = Data.mock_charge(
-            :id => id,
-            :customer => cus[:id],
-            :amount => amount,
-            :invoice => in_id,
-            :payment_intent => pi_id,
-            :description => sub[:description]
-          )
+            charges[id] = Data.mock_charge(
+              :id => id,
+              :customer => cus[:id],
+              :amount => amount,
+              :invoice => in_id,
+              :payment_intent => pi_id,
+              :description => sub[:description]
+            )
+          end
 
           invoice[:payment_intent] = pi_id
           invoices[in_id] = invoice

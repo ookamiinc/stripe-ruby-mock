@@ -253,6 +253,19 @@ shared_examples 'Invoice API' do
       expect(sent_invoice.invoice_pdf).to include('https://pay.stripe.com')
     end
 
+    it 'creates payment_intent when not present' do
+      sent_invoice = Stripe::Invoice.send_invoice(@invoice.id)
+      expect(sent_invoice.payment_intent).to be_a(String)
+    end
+
+    it 'expands payment_intent when requested' do
+      sent_invoice = Stripe::Invoice.send_invoice(
+        @invoice.id, expand: ['payment_intent']
+      )
+      expect(sent_invoice.payment_intent).to respond_to(:status)
+      expect(sent_invoice.payment_intent.status).to eq('requires_payment_method')
+    end
+
     it 'raises error for non-existent invoice' do
       expect { Stripe::Invoice.send_invoice('in_nonexistent') }.to raise_error(Stripe::InvalidRequestError)
     end
