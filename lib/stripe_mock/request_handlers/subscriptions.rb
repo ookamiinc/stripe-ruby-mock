@@ -475,7 +475,7 @@ module StripeMock
               invoice = invoices[invoice_id]
               subscription[:latest_invoice] = invoice.clone if invoice
             end
-          when 'latest_invoice.payment_intent'
+          when /^latest_invoice\.payment_intent/
             invoice_id = subscription[:latest_invoice]
             if invoice_id.is_a?(String)
               invoice = invoices[invoice_id]
