@@ -74,7 +74,7 @@ module StripeMock
         params
       end
 
-      def add_subscription_to_customer(cus, sub)
+      def add_subscription_to_customer(cus, sub, pi_status_override: nil)
         if sub[:trial_end].nil? || sub[:trial_end] == "now"
           id = new_id('ch')
           amount = if sub[:plan]
@@ -133,7 +133,13 @@ module StripeMock
             pi_id = new_id('pi')
             pm_id = new_id('pm')
             payment_methods[pm_id] = Data.mock_payment_method(id: pm_id, type: 'card', customer: cus[:id])
-            intent_status = is_incomplete ? 'requires_payment_method' : 'succeeded'
+            intent_status = if pi_status_override
+                              pi_status_override
+                            elsif is_incomplete
+                              'requires_payment_method'
+                            else
+                              'succeeded'
+                            end
             pi = Data.mock_payment_intent(
               id: pi_id, status: intent_status,
               amount: amount, currency: plan_or_price&.[](:currency),

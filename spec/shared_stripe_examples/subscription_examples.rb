@@ -1376,6 +1376,18 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(sub.latest_invoice.hosted_invoice_url).to include('https://invoice.stripe.com')
   end
 
+  it "creates incomplete subscription with requires_action on 3DS" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    StripeMock.prepare_payment_action(:requires_action)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    expect(sub.status).to eq('incomplete')
+    expect(sub.latest_invoice.payment_intent.status).to eq('requires_action')
+  end
+
   it "updates subscription to incomplete on card decline" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     sub = Stripe::Subscription.create(

@@ -174,19 +174,27 @@ module StripeMock
           subscription[:transfer_data][:amount_percent] ||= 100
         end
 
-        # Check for queued card error - set incomplete instead of raising
+        # Check for pending payment action (3DS) or queued card error
         # This simulates real Stripe's allow_incomplete default behavior
-        if @error_queue.error_for_handler_name(:new_subscription)
+        pi_status_override = nil
+        if @pending_payment_action
+          subscription[:status] = 'incomplete'
+          pi_status_override = @pending_payment_action
+          @pending_payment_action = nil
+        elsif @error_queue.error_for_handler_name(:new_subscription)
           @error_queue.dequeue
           subscription[:status] = 'incomplete'
+          pi_status_override = 'requires_payment_method'
         end
 
         subscriptions[subscription[:id]] = subscription
-        add_subscription_to_customer(customer, subscription)
+        add_subscription_to_customer(customer, subscription, pi_status_override: pi_status_override)
 
         if params[:expand]
           result = subscription.clone
-          generate_subscription_invoice_if_needed(result, params[:expand])
+          generate_subscription_invoice_if_needed(
+            result, params[:expand], pi_status_override: pi_status_override
+          )
           expand_subscription_fields(result, params[:expand], stripe_account)
           return result
         end
