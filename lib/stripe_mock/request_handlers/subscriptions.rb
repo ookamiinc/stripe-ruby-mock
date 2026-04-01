@@ -174,6 +174,13 @@ module StripeMock
           subscription[:transfer_data][:amount_percent] ||= 100
         end
 
+        # Check for queued card error - set incomplete instead of raising
+        # This simulates real Stripe's allow_incomplete default behavior
+        if @error_queue.error_for_handler_name(:new_subscription)
+          @error_queue.dequeue
+          subscription[:status] = 'incomplete'
+        end
+
         subscriptions[subscription[:id]] = subscription
         add_subscription_to_customer(customer, subscription)
 

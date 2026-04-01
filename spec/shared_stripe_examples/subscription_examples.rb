@@ -1350,6 +1350,19 @@ shared_examples 'Customer Subscriptions with plans' do
     Stripe::Subscription.create options
   end
 
+  it "creates incomplete subscription on card decline with expand" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    StripeMock.prepare_card_error(:card_declined, :new_subscription)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      expand: ['latest_invoice.payment_intent']
+    )
+    expect(sub.status).to eq('incomplete')
+    expect(sub.latest_invoice.status).to eq('open')
+    expect(sub.latest_invoice.payment_intent.status).to eq('requires_payment_method')
+  end
+
   it "creates incomplete subscription for send_invoice with draft invoice" do
     customer = Stripe::Customer.create
     sub = Stripe::Subscription.create(
