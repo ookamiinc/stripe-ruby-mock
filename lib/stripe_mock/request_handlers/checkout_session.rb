@@ -10,7 +10,10 @@ module StripeMock
         end
 
         def new_session(route, method_url, params, headers)
-          id = params[:id] || new_id('cs')
+          # Checkout sessions uniquely use cs_test_ prefix in test mode
+          # (other objects use <prefix>_ without _test_, e.g. pi_, cus_).
+          # Live mode uses cs_live_. Verified against real Stripe API.
+          id = params[:id] || "cs_test_#{SecureRandom.alphanumeric(48)}"
 
           require_param(:success_url) if params[:success_url].nil? || params[:success_url].empty?
 
