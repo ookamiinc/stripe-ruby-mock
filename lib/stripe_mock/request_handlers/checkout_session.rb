@@ -152,6 +152,10 @@ module StripeMock
           checkout_session = assert_existence :checkout_session, $1, checkout_sessions[$1]
 
           checkout_session = checkout_session.clone
+          if params[:expand]&.include?('payment_intent') && checkout_session[:payment_intent]
+            pi_id = checkout_session[:payment_intent]
+            checkout_session[:payment_intent] = payment_intents[pi_id] if payment_intents[pi_id]
+          end
           if params[:expand]&.include?('setup_intent') && checkout_session[:setup_intent]
             checkout_session[:setup_intent] = setup_intents[checkout_session[:setup_intent]]
           end
