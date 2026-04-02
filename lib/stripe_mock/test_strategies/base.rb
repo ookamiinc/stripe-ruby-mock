@@ -126,7 +126,9 @@ module StripeMock
       end
 
       def complete_checkout_session(session, payment_method)
-        session = session.is_a?(Stripe::Checkout::Session) ? session : Stripe::Checkout::Session.retrieve(session)
+        # Always retrieve from store to get internal PI ID (not nil'd in create response)
+        session_id = session.is_a?(Stripe::Checkout::Session) ? session.id : session
+        session = Stripe::Checkout::Session.retrieve(session_id)
         payment_method = payment_method.is_a?(Stripe::PaymentMethod) ? payment_method : Stripe::PaymentMethod.retrieve(payment_method)
         case session.mode
         when "payment"

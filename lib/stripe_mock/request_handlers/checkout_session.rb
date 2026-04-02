@@ -69,6 +69,8 @@ module StripeMock
           when nil, "payment"
             params[:customer] ||= new_customer(nil, nil, {email: params[:customer_email]}, nil)[:id]
             require_param(:line_items) if params[:line_items].nil? || params[:line_items].empty?
+            # Create PI internally for completion, but don't expose in response
+            # Real Stripe returns payment_intent: nil until session is completed
             payment_intent = new_payment_intent(nil, nil, {
               amount: amount,
               currency: currency,
@@ -131,6 +133,12 @@ module StripeMock
             total_details: nil,
             url: URI.join(StripeMock.checkout_base, id).to_s
           }
+
+          # Return clone with payment_intent nil (real Stripe sets it on completion)
+          # The stored session keeps the PI ID for complete_checkout_session
+          result = checkout_sessions[id].clone
+          result[:payment_intent] = nil if result[:payment_intent]
+          result
         end
 
         def list_checkout_sessions(route, method_url, params, headers)

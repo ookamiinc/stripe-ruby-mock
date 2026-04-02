@@ -11,7 +11,9 @@ shared_examples "Completing Checkout Sessions" do
 
     payment_intent = test_helper.complete_checkout_session(session, payment_method)
 
-    expect(payment_intent.id).to eq(session.payment_intent)
+    # Retrieve stored session to get PI ID (nil in create response)
+    stored_session = Stripe::Checkout::Session.retrieve(session.id)
+    expect(payment_intent.id).to eq(stored_session.payment_intent)
     expect(payment_intent.payment_method).to eq(payment_method.id)
     expect(payment_intent.status).to eq("succeeded")
   end

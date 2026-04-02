@@ -10,7 +10,15 @@ shared_examples "Checkout Session API" do
     expect(session.status).to eq("open")
   end
 
-  it "creates PaymentIntent with payment mode" do
+  it "returns nil payment_intent on create (PI created on completion)" do
+    session = Stripe::Checkout::Session.create(
+      line_items: [{ name: "T-shirt", quantity: 1, amount: 500, currency: "usd" }],
+      success_url: "https://example.com/success"
+    )
+    expect(session.payment_intent).to be_nil
+  end
+
+  it "stores PaymentIntent internally for completion" do
     line_items = [{
       name: "T-shirt",
       quantity: 2,
@@ -23,11 +31,11 @@ shared_examples "Checkout Session API" do
       success_url: "https://example.com/success"
     )
 
-    expect(session.payment_intent).to_not be_empty
-    payment_intent = Stripe::PaymentIntent.retrieve(session.payment_intent)
-    expect(payment_intent.amount).to eq(1000)
-    expect(payment_intent.currency).to eq("usd")
-    expect(payment_intent.customer).to eq(session.customer)
+    # PI is nil in response but stored internally
+    expect(session.payment_intent).to be_nil
+    # Retrieving stored session has PI ID for completion
+    stored = Stripe::Checkout::Session.retrieve(session.id)
+    expect(stored.payment_intent).to_not be_nil
   end
 
   context "when creating a payment" do
