@@ -126,19 +126,23 @@ module StripeMock
       end
 
       def complete_checkout_session(session, payment_method)
-        # Always retrieve from store to get internal PI ID (not nil'd in create response)
         session_id = session.is_a?(Stripe::Checkout::Session) ? session.id : session
-        session = Stripe::Checkout::Session.retrieve(session_id)
         payment_method = payment_method.is_a?(Stripe::PaymentMethod) ? payment_method : Stripe::PaymentMethod.retrieve(payment_method)
-        case session.mode
+
+        # Access stored session directly to get internal PI ID
+        stored = StripeMock.instance.checkout_sessions[session_id]
+
+        result = case stored[:mode]
         when "payment"
-          Stripe::PaymentIntent.retrieve(session.payment_intent).confirm(payment_method: payment_method.id)
+          pi_id = stored[:payment_intent]
+          Stripe::PaymentIntent.retrieve(pi_id).confirm(payment_method: payment_method.id)
         when "setup"
-          Stripe::SetupIntent.update(session.setup_intent, {payment_method: payment_method.id})
+          si_id = stored[:setup_intent]
+          Stripe::SetupIntent.update(si_id, {payment_method: payment_method.id})
         when "subscription"
-          line_items = Stripe::Checkout::Session.list_line_items(session.id)
+          line_items = Stripe::Checkout::Session.list_line_items(session_id)
           Stripe::Subscription.create({
-            customer: session.customer,
+            customer: stored[:customer],
             items: line_items.map do |line_item|
               {
                 price: line_item.price.id,
@@ -147,6 +151,19 @@ module StripeMock
             end,
             default_payment_method: payment_method.id
           })
+        end
+
+        # Update session to completed state
+        mark_checkout_session_complete(session_id)
+        result
+      end
+
+      def mark_checkout_session_complete(session_id)
+        session = StripeMock.instance.checkout_sessions[session_id]
+        if session
+          session[:status] = 'complete'
+          session[:payment_status] = 'paid'
+          session[:url] = nil
         end
       end
 

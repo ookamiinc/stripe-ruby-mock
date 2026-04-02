@@ -10,32 +10,39 @@ shared_examples "Checkout Session API" do
     expect(session.status).to eq("open")
   end
 
-  it "returns nil payment_intent on create (PI created on completion)" do
+  it "returns nil payment_intent and open status on create" do
     session = Stripe::Checkout::Session.create(
       line_items: [{ name: "T-shirt", quantity: 1, amount: 500, currency: "usd" }],
       success_url: "https://example.com/success"
     )
     expect(session.payment_intent).to be_nil
+    expect(session.status).to eq("open")
+    expect(session.payment_status).to eq("unpaid")
   end
 
-  it "stores PaymentIntent internally for completion" do
-    line_items = [{
-      name: "T-shirt",
-      quantity: 2,
-      amount: 500,
-      currency: "usd",
-    }]
+  it "returns nil payment_intent on retrieve for open session" do
     session = Stripe::Checkout::Session.create(
-      payment_method_types: ["card"],
-      line_items: line_items,
+      line_items: [{ name: "T-shirt", quantity: 1, amount: 500, currency: "usd" }],
       success_url: "https://example.com/success"
     )
+    retrieved = Stripe::Checkout::Session.retrieve(session.id)
+    expect(retrieved.payment_intent).to be_nil
+    expect(retrieved.status).to eq("open")
+  end
 
-    # PI is nil in response but stored internally
-    expect(session.payment_intent).to be_nil
-    # Retrieving stored session has PI ID for completion
-    stored = Stripe::Checkout::Session.retrieve(session.id)
-    expect(stored.payment_intent).to_not be_nil
+  it "sets payment_intent and complete status after completion" do
+    session = Stripe::Checkout::Session.create(
+      line_items: [{ name: "T-shirt", quantity: 1, amount: 500, currency: "usd" }],
+      success_url: "https://example.com/success"
+    )
+    pm = Stripe::PaymentMethod.create(type: "card")
+    stripe_helper.complete_checkout_session(session, pm)
+
+    completed = Stripe::Checkout::Session.retrieve(session.id)
+    expect(completed.status).to eq("complete")
+    expect(completed.payment_status).to eq("paid")
+    expect(completed.payment_intent).not_to be_nil
+    expect(completed.url).to be_nil
   end
 
   context "when creating a payment" do
