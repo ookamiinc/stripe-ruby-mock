@@ -67,7 +67,9 @@ module StripeMock
           setup_intent = nil
           case params[:mode]
           when nil, "payment"
-            params[:customer] ||= new_customer(nil, nil, {email: params[:customer_email]}, nil)[:id]
+            if params[:customer].nil? && params[:customer_email] && !params[:customer_email].to_s.empty?
+              params[:customer] = new_customer(nil, nil, {email: params[:customer_email]}, nil)[:id]
+            end
             require_param(:line_items) if params[:line_items].nil? || params[:line_items].empty?
             # Create PI internally for completion, but don't expose in response
             # Real Stripe returns payment_intent: nil until session is completed
