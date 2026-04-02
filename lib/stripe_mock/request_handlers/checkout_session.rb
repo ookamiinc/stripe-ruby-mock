@@ -10,7 +10,7 @@ module StripeMock
         end
 
         def new_session(route, method_url, params, headers)
-          id = params[:id] || "cs_#{StripeMock.global_id_prefix}#{@id_counter += 1}"
+          id = params[:id] || new_id('cs')
 
           require_param(:success_url) if params[:success_url].nil? || params[:success_url].empty?
 

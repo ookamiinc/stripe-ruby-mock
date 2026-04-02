@@ -232,7 +232,11 @@ module StripeMock
 
     def new_id(prefix)
       # Stripe ids must be strings
-      "#{StripeMock.global_id_prefix}#{prefix}_#{@id_counter += 1}"
+      if StripeMock.stripe_id_format
+        "#{prefix}_#{StripeMock.global_id_prefix}#{@id_counter += 1}"
+      else
+        "#{StripeMock.global_id_prefix}#{prefix}_#{@id_counter += 1}"
+      end
     end
 
     def new_balance_transaction(prefix, params = {})
