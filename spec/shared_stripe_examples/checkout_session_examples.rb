@@ -1,6 +1,15 @@
 require "spec_helper"
 
 shared_examples "Checkout Session API" do
+  it "includes created timestamp and open status" do
+    session = Stripe::Checkout::Session.create(
+      line_items: [{ name: "T-shirt", quantity: 1, amount: 500, currency: "usd" }],
+      success_url: "https://example.com/success"
+    )
+    expect(session.created).to be_a(Integer)
+    expect(session.status).to eq("open")
+  end
+
   it "creates PaymentIntent with payment mode" do
     line_items = [{
       name: "T-shirt",

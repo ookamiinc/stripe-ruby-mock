@@ -98,6 +98,8 @@ module StripeMock
           checkout_sessions[id] = {
             id: id,
             object: "checkout.session",
+            created: Time.now.utc.to_i,
+            status: "open",
             allow_promotion_codes: nil,
             amount_subtotal: amount,
             amount_total: amount,
