@@ -129,8 +129,9 @@ module StripeMock
         session_id = session.is_a?(Stripe::Checkout::Session) ? session.id : session
         payment_method = payment_method.is_a?(Stripe::PaymentMethod) ? payment_method : Stripe::PaymentMethod.retrieve(payment_method)
 
-        # Access stored session directly to get internal PI ID
-        stored = StripeMock.instance.checkout_sessions[session_id]
+        # Access stored session to get internal PI ID (hidden in API responses while open)
+        backend = StripeMock.instance || StripeMock.client
+        stored = backend.get_checkout_session_data(session_id)
 
         result = case stored[:mode]
         when "payment"
@@ -154,17 +155,8 @@ module StripeMock
         end
 
         # Update session to completed state
-        mark_checkout_session_complete(session_id)
+        backend.mark_checkout_session_complete(session_id)
         result
-      end
-
-      def mark_checkout_session_complete(session_id)
-        session = StripeMock.instance.checkout_sessions[session_id]
-        if session
-          session[:status] = 'complete'
-          session[:payment_status] = 'paid'
-          session[:url] = nil
-        end
       end
 
       def create_coupon(params = {})

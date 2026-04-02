@@ -98,5 +98,18 @@ module StripeMock
     def upsert_stripe_object(object, attributes)
       @instance.upsert_stripe_object(object, attributes)
     end
+
+    def get_checkout_session_data(session_id)
+      @instance.checkout_sessions[session_id]
+    end
+
+    def mark_checkout_session_complete(session_id)
+      session = @instance.checkout_sessions[session_id]
+      if session
+        session[:status] = 'complete'
+        session[:payment_status] = 'paid'
+        session[:url] = nil
+      end
+    end
   end
 end

@@ -94,6 +94,14 @@ module StripeMock
       timeout_wrap { @pipe.upsert_stripe_object(object, attributes) }
     end
 
+    def get_checkout_session_data(session_id)
+      timeout_wrap { @pipe.get_checkout_session_data(session_id) }
+    end
+
+    def mark_checkout_session_complete(session_id)
+      timeout_wrap { @pipe.mark_checkout_session_complete(session_id) }
+    end
+
     def close!
       self.cleanup
       StripeMock.stop_client(:clear_server_data => false)
