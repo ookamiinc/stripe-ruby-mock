@@ -35,6 +35,13 @@ shared_examples 'PaymentIntent API' do
     expect(payment_intent.statement_descriptor_suffix).to be_nil
   end
 
+  it "converts integer metadata values to strings on create" do
+    payment_intent = Stripe::PaymentIntent.create(
+      amount: 100, currency: "usd", metadata: { items_amount: 100 }
+    )
+    expect(payment_intent.metadata.items_amount).to eq("100")
+  end
+
   it "has empty charges.data and total_count 0 before confirmation" do
     payment_intent = Stripe::PaymentIntent.create(amount: 3184, currency: "usd")
 
@@ -244,6 +251,13 @@ shared_examples 'PaymentIntent API' do
     updated = Stripe::PaymentIntent.retrieve(original.id)
 
     expect(updated.amount).to eq(200)
+  end
+
+  it "converts integer metadata values to strings on update" do
+    original = Stripe::PaymentIntent.create(amount: 100, currency: "usd")
+    Stripe::PaymentIntent.update(original.id, metadata: { items_amount: 100 })
+    updated = Stripe::PaymentIntent.retrieve(original.id)
+    expect(updated.metadata.items_amount).to eq("100")
   end
 
   it 'when amount is not integer', live: true do
