@@ -40,7 +40,7 @@ module StripeMock
         keys_to_merge = /application_fee_percent|quantity|metadata|tax_percent|billing|days_until_due|default_tax_rates|pending_invoice_item_interval|default_payment_method|collection_method|payment_settings/
         merged = options.select {|k,v| k =~ keys_to_merge && !v.nil?}
         # Real Stripe clears default_payment_method when set to empty string
-        if options.key?(:default_payment_method) && options[:default_payment_method].to_s.empty?
+        if options.key?(:default_payment_method) && options[:default_payment_method] == ""
           merged[:default_payment_method] = nil
         end
         if merged[:metadata]
