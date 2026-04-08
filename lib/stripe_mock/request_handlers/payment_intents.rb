@@ -18,6 +18,9 @@ module StripeMock
         id = new_id('pi')
 
         ensure_payment_intent_required_params(params)
+        if params[:metadata]
+          params[:metadata] = params[:metadata].transform_values(&:to_s)
+        end
         # @pending_payment_action is also consumed by create_subscription
         # and update_subscription (for subscription-scoped 3DS/decline).
         # Whichever handler runs first consumes it. This is safe because
@@ -60,6 +63,9 @@ module StripeMock
         route =~ method_url
         id = $1
 
+        if params[:metadata]
+          params[:metadata] = params[:metadata].transform_values(&:to_s)
+        end
         payment_intent = assert_existence :payment_intent, id, payment_intents[id]
         payment_intents[id] = Util.rmerge(payment_intent, params.select{ |k,v| ALLOWED_PARAMS.include?(k)})
       end
