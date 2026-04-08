@@ -1447,6 +1447,21 @@ shared_examples 'Customer Subscriptions with plans' do
     expect(updated.default_payment_method).to be_nil
   end
 
+  it "does not clear default_payment_method when updated with nil" do
+    customer = Stripe::Customer.create(source: gen_card_tk)
+    pm = Stripe::PaymentMethod.create(type: 'card', card: { number: '4242424242424242', exp_month: 12, exp_year: 2030, cvc: '123' })
+    Stripe::PaymentMethod.attach(pm.id, customer: customer.id)
+    sub = Stripe::Subscription.create(
+      customer: customer.id,
+      items: [{ plan: plan.id }],
+      default_payment_method: pm.id,
+    )
+    expect(sub.default_payment_method).to eq(pm.id)
+    updated = Stripe::Subscription.update(sub.id, default_payment_method: nil)
+    expect(updated.status).to eq('active')
+    expect(updated.default_payment_method).to eq(pm.id)
+  end
+
   it "does not create payment_intent for send_invoice subscription update" do
     customer = Stripe::Customer.create(source: gen_card_tk)
     sub = Stripe::Subscription.create(
