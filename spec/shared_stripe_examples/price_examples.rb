@@ -70,6 +70,22 @@ shared_examples 'Price API' do
     expect(price.amount).to eq(original.amount)
   end
 
+  it "retrieves a stripe price with expand 'product'" do
+    original = stripe_helper.create_price(product: product_id, amount: 1331, id: 'price_expand_test')
+    price = Stripe::Price.retrieve(id: original.id, expand: ['product'])
+
+    expect(price.id).to eq(original.id)
+    expect(price.product).to respond_to(:id)
+    expect(price.product.id).to eq(product_id)
+  end
+
+  it "retrieves a stripe price without expand" do
+    original = stripe_helper.create_price(product: product_id, amount: 1331, id: 'price_no_expand_test')
+    price = Stripe::Price.retrieve(original.id)
+
+    expect(price.product).to eq(product_id)
+  end
+
   it "updates a stripe price" do
     stripe_helper.create_price(id: 'super_member', product: product_id, amount: 111)
 
